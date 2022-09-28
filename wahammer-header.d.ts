@@ -1,5 +1,6 @@
 /** @noSelfInFile */
 /* eslint-disable */
+/// <reference path="user-interface-header.d.ts" />
 
 declare function print(...args: any[]): void
 /**
@@ -395,8 +396,18 @@ type Callback = {
 }
 
 interface ICore {
-    add_listener(listenerName: string, eventName: string, conditionalTest: ConditionalTest | Boolean, callback: Callback, persistsAfterCall :boolean): void
+    add_listener(listenerName: string, eventName: string, conditionalTest: ConditionalTest | Boolean, callback: Callback, persistsAfterCall: boolean): void
+    get_ui_root(): IUIComponent
+}
+
+interface ICommon {
+    /**
+     * 
+     * Retrieves a localised string from the database by its full localisation key. This is in the form [table]_[field]_[record_key]. If the lookup fails, an empty string is returned.
+     */
+    get_localised_string(this: void, localisationKey: string): string
 }
 
 declare const cm: ICampaignManager
 declare const core: ICore
+declare const common: ICommon
