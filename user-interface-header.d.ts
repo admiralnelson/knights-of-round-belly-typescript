@@ -2,6 +2,8 @@
 /// <reference path="wahammer-header.d.ts" />
 
 declare function find_uicomponent(parentComponent?: IUIComponent, ...componentNames: string[]): IUIComponent
+declare function uic_pairs(parentComponent: IUIComponent): Iterable<IUIComponent>
+
 
 interface IUIComponent {
     /** Returns the number of images associated with the subject uicomponent. */
