@@ -25,5 +25,5 @@ interface IUIComponent {
     /**
      * Returns the text on the current state of the uicomponent along with its dimensions. This text will be localised.
      * */
-    GetStateText(): [localisedUicomponentText: string, stringtableKey: string]
+    GetStateText(): LuaMultiReturn<[localisedUicomponentText: string, stringtableKey: string]>
 }

@@ -2,6 +2,7 @@
 /* eslint-disable */
 
 declare function print(...args: any[]): void
+
 /**
  * ONLY AVAILABLE IN SNED LOADER ENV ONLY! 
  * starts SNED lua debugger */
@@ -511,7 +512,8 @@ interface ICampaignManager {
     /** returns current turn number */
     turn_number(): number
     get_faction(factionKey: string, errorIfNotFound?: boolean): IFactionScript
-    get_character_by_cqi(cqiNo: number): ICharacterScript
+    /* Returns a character by it's command queue index. If no character with the supplied cqi is found then false is returned. */
+    get_character_by_cqi(cqiNo: number): ICharacterScript | false
     /**
      * 
      * @param factionKey Faction key of the faction to which the force is to belong.
@@ -533,6 +535,10 @@ interface ICampaignManager {
     find_valid_spawn_location_for_character_from_settlement(factionKey: string,regionKey: string, mustBeOnSea: boolean, mustBeInSameRegion: boolean, preferredSpawnDistance?: number): LuaMultiReturn<[logicalPosX: number, logicalPosY: number]>
     /** returns game model data for current campaign */
     model(): IModelScript
+    /** Kills a specified character and their associated unit, and optionally also the entire military force they command. */
+    kill_character_and_commanded_unit(characterLookUp: string, destroyTheForceToo: boolean): void
+    force_add_ancillary(who: ICharacterScript, ancillaryKey: string, forceEquip: boolean, dontShowNotification: boolean): void
+    trigger_mission(factionKey: string, missionKey: string, fireImmediately: boolean): boolean
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
@@ -541,6 +547,8 @@ interface IContext {
     faction?() : IFactionScript
     character?(): ICharacterScript
     character_details?(): ICharacterDetailsScript
+    string?: string
+    skill_point_spent_on?(): string
 }
 
 type ConditionalTest = {
@@ -556,3 +564,14 @@ interface ICore {
 
 declare const cm: ICampaignManager
 declare const core: ICore
+
+
+interface IDebugger {
+    enterDebugLoop(this: void, stackDepth: number, whatMessage: string): void
+    print(category: "error" | "warning" | "log", ...msg: string[]): void
+}
+
+/**
+ * ONLY AVAILABLE when TW DEBUGGER mod is loaded!
+ */
+declare const debuggee: IDebugger | null
