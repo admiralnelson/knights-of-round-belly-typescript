@@ -120,7 +120,11 @@ interface IUniqueAgentDetailsListScript extends IListScript {
 }
 
 interface IEffectBundleListScript extends IListScript {
+    item_at(index: number): IEffectBundleScript
+}
 
+interface IEffectListScript extends IListScript {
+    item_at(index: number): IEffectScript
 }
 
 interface IProvinceListScript extends IListScript {
@@ -161,6 +165,21 @@ interface IFactionCharacterTaggingSystemScript extends INullScript {
 
 interface ICharacterObservationOptionsScript extends INullScript {
 
+}
+
+interface IEffectScript extends INullScript {
+
+}
+
+interface IEffectBundleScript extends INullScript {
+    key(): string
+    effects(): IEffectListScript
+    duration(): number
+    clone_and_create_custom_effect_bundle(): ICustomEffectBundleScript
+}
+
+interface ICustomEffectBundleScript extends INullScript {
+    
 }
 
 interface ICaravanSystemScript extends INullScript {
@@ -549,6 +568,35 @@ interface ICampaignManager {
     kill_character_and_commanded_unit(characterLookUp: string, destroyTheForceToo: boolean): void
     force_add_ancillary(who: ICharacterScript, ancillaryKey: string, forceEquip: boolean, dontShowNotification: boolean): void
     trigger_mission(factionKey: string, missionKey: string, fireImmediately: boolean): boolean
+    /**
+     * Applies an effect bundle to a faction for a number of turns (can be infinite)
+     * @param effectBundleKey Effect bundle key from the effect bundles table.
+     * @param factionKey Faction key of the faction to apply the effect to.
+     * @param turns Number of turns to apply the effect bundle for. Supply 0 here to apply the effect bundle indefinitely (it can be removed later with campaign_manager.remove_effect_bundle if required).
+     */
+    apply_effect_bundle(effectBundleKey: string, factionKey: string, turns: number): void
+    remove_effect_bundle(effectBundleKey: string, factionKey: string): void
+    /**
+     * Constructs and displays an event. This wraps the cm.show_message_event function of the same name on the underlying episodic_scripting, although it provides input validation, output, whitelisting and a progression callback.
+     * @param factionKey Faction key to who the event is targeted.
+     * @param titleLocKey Localisation key for the event title. This should be supplied in the full `[table]_[field]_[key]` localisation format, or can be a blank string.
+     * @param primaryLocKey Localisation key for the primary detail of the event. This should be supplied in the full `[table]_[field]_[key]` localisation format, or can be a blank string.
+     * @param secondaryLocKey Localisation key for the secondary detail of the event. This should be supplied in the full `[table]_[field]_[key]` localisation format, or can be a blank string.
+     * @param isPersistent Sets this event to be persistent instead of transient.
+     * @param index Index indicating the type of event.
+     * @param endCallback optional, default value=false Specifies a callback to call when this event is dismissed. Note that if another event message shows first for some reason, this callback will be called early.
+     * @param callbackDelay optional, default value=0 Delay in seconds before calling the end callback, if supplied.
+     * @param dontWhitelist optional, default value=false By default this function will whitelist the scripted event message type with campaign_manager.whitelist_event_feed_event_type. Set this flag to true to prevent this.
+     */
+    show_message_event(factionKey: string, titleLocKey: string, primaryLocKey: string, secondaryLocKey: string, isPersistent: boolean,  index: number, endCallback?: () => void, callbackDelay?: number, dontWhitelist?: boolean): void
+    /**
+     * Registers a turn countdown event. The supplied script event will be triggered after the specified number of turns has passed, when the FactionTurnStart event is received for the specified faction.
+     * @param factionKey Key of the faction on whose turn start the event will be triggered.
+     * @param turns Number of turns from now to trigger the event.
+     * @param event Event to trigger. By convention, script event names begin with "ScriptEvent"
+     * @param contextString optional, default value="" Optional context string to trigger with the event.
+     */
+    add_turn_countdown_event(factionKey: string, turns: number, event: string, contextString: string): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
@@ -579,6 +627,7 @@ type Callback = {
 
 interface ICore {
     add_listener(listenerName: string, eventName: string, conditionalTest: ConditionalTest | Boolean, callback: Callback, persistsAfterCall :boolean): void
+    trigger_event(whatEvent: string): void
 }
 
 declare const cm: ICampaignManager
