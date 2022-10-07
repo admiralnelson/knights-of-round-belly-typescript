@@ -11,7 +11,7 @@
   },
   "tstl": {
     "luaTarget": "5.1",
-    "sourceMapTraceback": false,
+    "sourceMapTraceback": true,
     "luaLibImport": "inline",
   },
   "include": [
