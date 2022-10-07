@@ -24,8 +24,8 @@ if %ERRORLEVEL% NEQ 0 (
 
 
 robocopy script *.lua /s /V /XD .git script node_modules .vscode /XF *.ts > NUL
-copy runtime\*.* script\campaign\mod > NUL
-mkdir script\_lib 2> NUL
+mkdir script\_lib\mod 2> NUL
+copy runtime\*.* script\_lib\mod > NUL
 
 :pause
 pause
