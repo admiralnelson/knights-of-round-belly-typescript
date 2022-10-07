@@ -494,6 +494,16 @@ type CallbackCreateForce = {
     (cqi: number): void
 }
 
+interface ICcoScriptObject {
+    /** retrive data or variable that stored in Scripted Object. contextCommand for example: ```ScriptObjectContext("peasant_count_wh_main_brt_bretonnia").NumericValue```. play around in context viewer window to test your queries
+     * it will return null if it can't execute your query
+     * you will also need to cast it like so ```common.get_context_value(`ScriptObjectContext("peasant_count_wh_main_brt_bretonnia").NumericValue`) as number```
+     */
+    get_context_value(this:void, contextQuery: string, functionId?: string | number | boolean): unknown | null
+    set_context_value(this:void, contextQuery: string, arg?: string | number | boolean): void
+    call_context_command(this:void, contextQuery: string, ...args: any[]): void
+}
+
 interface ICampaignManager {
     null_interface(): any
     /** a function will fire right after loading has finished  */
@@ -551,6 +561,15 @@ interface IContext {
     skill_point_spent_on?(): string
 }
 
+interface IRealTimer {
+    /** it's recommended to use setInterval or setTimeout instead */
+    unregister(this: void, name: string): void
+    /** it's recommended to use setInterval or setTimeout instead */
+    register_repeating(this: void, name: string, delayInMs: number): void
+    /** it's recommended to use setInterval or setTimeout instead */
+    register_singleshot(this: void, name: string, delayInMs: number): void
+}
+
 type ConditionalTest = {
     (context: IContext) : boolean
 }
@@ -564,7 +583,8 @@ interface ICore {
 
 declare const cm: ICampaignManager
 declare const core: ICore
-
+declare const common: ICcoScriptObject
+declare const real_timer: IRealTimer
 
 interface IDebugger {
     enterDebugLoop(this: void, stackDepth: number, whatMessage: string): void
