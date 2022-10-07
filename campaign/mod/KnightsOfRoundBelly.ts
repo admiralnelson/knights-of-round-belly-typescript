@@ -3,6 +3,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     export const VERSION = 1
     export const ADMKNIGHTSOFTHEROUNDBELLY = "ADMKNIGHTSOFTHEROUNDBELLY:v"+VERSION
 
+    const PEASANTS_EFFECT_PREFIX = "wh_dlc07_bundle_peasant_penalty_"
 
     const LOUIS_MISSION_KEY    = "admiralnelson_louis_grand_mace_mission_key"
 
@@ -44,9 +45,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             {faction: "wh_main_brt_bastonne", priority: 11},
         ]
 
-
-
-        private bHasTurnsBegan = false
+        private readonly PeasantSlotPenaltySkills = [
+            {skill: CIVILISED_SKILL_KEY, penalty: -1 },
+            {skill: OGRE_SKILL_KEY, penalty: 6},
+            {skill: GREATER_GIRTH_SKILL_KEY, penalty: 2},
+            {skill: LOUIS_MOUNT_SKILL_KEY, penalty: 2}
+            //the rest of grail skill put it here
+        ]
 
         private designatedFaction: IFactionScript | null = null
 
@@ -67,16 +72,21 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     theLordHimself = theLordHimself as ICharacterScript
                     this.LouisLeGrosHimself = theLordHimself
                     cm.trigger_mission(factionKey, LOUIS_MISSION_KEY, true)
-                    common.set_context_value(`peasant_count_${factionKey}`, 8)
-                    const peasantCounts = common.get_context_value(`ScriptObjectContext("peasant_count_${factionKey}").NumericValue`) as number
-                    this.l.LogWarn(`current peasant count is ${peasantCounts}`)
+                    // common.set_context_value(`peasant_count_${factionKey}`, 8)
+                    // const peasantCounts = common.get_context_value(`ScriptObjectContext("peasant_count_${factionKey}").NumericValue`) as number
+                    // this.l.LogWarn(`current peasant count is ${peasantCounts}`)
+                    setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 2000)
                 }
             })
             this.l.LogWarn("SpawnDukeLouisTest ok")
         }
 
         KillAllOgres(): void {
-            const faction = cm.model().world().faction_by_key("wh_main_brt_bretonnia")
+            if(this.designatedFaction == null) {
+                this.l.LogError(`KillAllOgres: cant execute this.designatedFaction is null`)
+                return
+            }
+            const faction = this.designatedFaction
             const armies = faction.military_force_list()
             for (let i = 0; i < armies.num_items() ; i++) {
                 const theArmy = armies.item_at(i)
@@ -108,6 +118,105 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return res
         }
 
+        GetPeasantSlotsUsedByOgres(): number {
+            const ogres = this.FindAllOgres()
+            let totalPeasantsUsedByOgres = 0
+            for (const iterator of ogres) {
+                const theOgre = iterator
+                this.l.Log(`GetPeasantSlotsUsedByOgres - iterating ${theOgre.character_subtype_key()}`)
+                for (const skill of this.PeasantSlotPenaltySkills) {
+                    this.l.Log(`    skill: ${skill.skill}? ${theOgre.has_skill(skill.skill) ? skill.penalty : "nope"}`)
+                    totalPeasantsUsedByOgres += theOgre.has_skill(skill.skill) ? skill.penalty : 0
+                }
+            }
+            return totalPeasantsUsedByOgres
+        }
+
+        GetAndUpdateCurrentPeasantSlotsUsage(): [peasantCount: number, peasantCap: number] {
+            if(this.designatedFaction == null) {
+                this.l.LogError(`GetAndUpdateCurrentPeasantSlotsUsage - no designated bretonnian faction, perhaps dead?`)
+                return [0, 0]
+            }
+            if(!this.designatedFaction.is_human()) return [0, 0]
+
+            const factionKey = this.designatedFaction.name()
+            Calculate_Economy_Penalty(this.designatedFaction)
+            return [common.get_context_value(`ScriptObjectContext("peasant_count_${factionKey}").NumericValue`) as number, 
+                    common.get_context_value(`ScriptObjectContext("peasant_cap_${factionKey}").NumericValue`) as number]
+        }
+
+        CalculatePeasantSlotsUsageAndApplyPenalties(): void {
+            if(this.designatedFaction == null) {
+                this.l.LogError(`CalculatePeasantSlotsUsage - no designated bretonnian faction, perhaps dead?`)
+                return
+            }
+            if(!this.designatedFaction.is_human()) return
+
+            const factionKey = this.designatedFaction.name()
+            const [currentPeasantUsageCount, freePeasantCount] = this.GetAndUpdateCurrentPeasantSlotsUsage()
+            const peasantsAllocatedByOgre = this.GetPeasantSlotsUsedByOgres()
+            const totalAllocatedPeasants = currentPeasantUsageCount + peasantsAllocatedByOgre
+            common.set_context_value(`peasant_count_${factionKey}`, totalAllocatedPeasants)
+            this.l.Log(`CalculatePeasantSlotsUsage currentPeasantUsageCount=${currentPeasantUsageCount} peasantsAllocatedByOgre=${peasantsAllocatedByOgre} totalAllocatedPeasants=${totalAllocatedPeasants}`)
+
+            //clear all penalties first
+            const effectBundles = this.designatedFaction.effect_bundles()
+            for (let i = 0; i < effectBundles.num_items(); i++) {
+                const effectBundle = effectBundles.item_at(i)
+                if(effectBundle.key().startsWith(PEASANTS_EFFECT_PREFIX)) cm.remove_effect_bundle(effectBundle.key(), factionKey)
+            }
+
+            //apply the penalties
+            let peasantPercent = (totalAllocatedPeasants / freePeasantCount) * 100
+            this.l.Log(`Peasant Percent: ${peasantPercent}%`)
+            peasantPercent = Math.floor(peasantPercent)
+            this.l.Log(`Peasant Percent Rounded: ${peasantPercent}%`)
+            peasantPercent = Math.min(peasantPercent, 200)
+            this.l.Log(`Peasant Percent Clamped: ${peasantPercent}%`)
+
+            if(peasantPercent > 100) {
+                peasantPercent -= 100
+                this.l.Log(`Peasant Percent Final: ${peasantPercent}%`)
+                cm.apply_effect_bundle(`${PEASANTS_EFFECT_PREFIX}${peasantPercent}`, factionKey, 0)
+                
+                if (!localStorage.getItem("ScriptEventNegativePeasantEconomy") &&
+                    this.designatedFaction.is_human()) {
+                    core.trigger_event("ScriptEventNegativePeasantEconomy")
+                    localStorage.setItem("ScriptEventNegativePeasantEconomy", true)
+                }
+                
+                const peasantRatioPositive = localStorage.getItem(`peasants_ratio_positive_${factionKey}`)
+                
+                if ((peasantRatioPositive || peasantRatioPositive == null) &&
+                     !localStorage.getItem(`peasant_warning_event_shown_${factionKey}`)) {
+                    cm.show_message_event(
+                        factionKey,
+                        "event_feed_strings_text_wh_dlc07_event_feed_string_scripted_event_peasant_negative_title",
+                        "event_feed_strings_text_wh_dlc07_event_feed_string_scripted_event_peasant_negative_primary_detail",
+                        "event_feed_strings_text_wh_dlc07_event_feed_string_scripted_event_peasant_negative_secondary_detail",
+                        true,
+                        703
+                    )
+                    localStorage.setItem(`peasant_warning_event_shown_${factionKey}`, true)
+                    cm.add_turn_countdown_event(factionKey, 25, "ScriptEventPeasantWarningEventCooldownExpired", factionKey)
+                }                    
+                
+                localStorage.setItem(`peasants_ratio_positive_${factionKey}`, false)
+            } else {
+                this.l.Log("Peasant Percent Final: 0")
+                cm.apply_effect_bundle(`${PEASANTS_EFFECT_PREFIX}0`, factionKey, 0)
+            
+                if (localStorage.getItem("ScriptEventNegativePeasantEconomy") && 
+                    !localStorage.getItem("ScriptEventPositivePeasantEconomy") &&
+                    this.designatedFaction.is_human()) {
+                    core.trigger_event("ScriptEventPositivePeasantEconomy")
+                    localStorage.setItem("ScriptEventPositivePeasantEconomy", true)
+                }                
+                localStorage.setItem(`peasants_ratio_positive_${factionKey}`, true)
+            }
+            
+        }
+
         GiveOgreLessPenaltiesForCompletingGrailQuests(whichOgre: ICharacterScript, whatQuest: "KnightsVow" | "QuestingVow" | "GrailVow"): void {
             if(this.OgreChampions.indexOf(whichOgre.character_subtype_key()) < 0) {
                 this.l.LogError(`whichOgre param (${whichOgre.character_subtype_key()}) is not defined in this.OgreChampions ${JSON.stringify(this.OgreChampions)} array`)
@@ -124,6 +233,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOnSkillAllocated()
             this.SetupOnCharacterRankUp()
             this.SetupGiveOgreLessPenaltiesForCompletingGrailQuests()
+            this.SetupOnFactionTurnStart()
+            this.SetupOnFactionTurnEnd()
             this.SetupTestTimer()
         }
 
@@ -174,6 +285,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     const skillKey = context.skill_point_spent_on ? context.skill_point_spent_on() : "UNKNOWN"
                     const character = context.character ? context.character().character_subtype_key() : "unknown"
                     this.l.Log(`${character} spent on ${skillKey}`)
+                    this.CalculatePeasantSlotsUsageAndApplyPenalties()
                 },
                 true
             )
@@ -190,11 +302,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     return character == DUKE_LOUIS_AGENT_KEY
                 },
                 (context) => {
-                    const character = context.character ? context.character() : null
-                    if(character == null) return
-
-                    this.l.Log(`${character.character_subtype_key()} levelled up to ${character.rank()}`)
-                    this.l.Log(`has this skill admiralnelson_louis_grand_mace_unlock_item_skill? ${character.has_skill('admiralnelson_louis_grand_mace_unlock_item_skill')}`)
+                    this.CalculatePeasantSlotsUsageAndApplyPenalties()
                 },
                 true
             )
@@ -250,22 +358,52 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.l.Log("SetupGiveOgreLessPenaltiesForCompletingGrailQuests ok")
         }
 
+        SetupOnFactionTurnStart(): void {
+            core.add_listener(
+                "admiralnelson SetupOnFactionTurnStart",
+                "FactionTurnStart",
+                (context) => {
+                    const faction = context.faction ? context.faction() : null
+                    if(faction == null) return false
+
+                    return this.designatedFaction == faction
+                },
+                (context) => this.CalculatePeasantSlotsUsageAndApplyPenalties(),
+                true
+            )
+
+            this.l.Log("SetupOnFactionTurnStart ok")
+        }
+
+        SetupOnFactionTurnEnd(): void {
+            core.add_listener(
+                "admiralnelson SetupOnFactionTurnEnd",
+                "FactionTurnEnd",
+                (context) => {
+                    const faction = context.faction ? context.faction() : null
+                    if(faction == null) return false
+
+                    return this.designatedFaction == faction
+                },
+                (context) => this.CalculatePeasantSlotsUsageAndApplyPenalties(),
+                true
+            )
+
+            this.l.Log("SetupOnFactionTurnEnd ok")
+        }
+        
+
         SetupTestTimer(): void {
-            let i = 0
-            const test = setInterval(() => {
-                this.l.Log("hello world")
-                i++
-            }, 1000)
-
-            setTimeout(() => this.l.Log("delayed call"), 1500)
-
-            setTimeout(() => {
-                clearInterval(test)
-            }, 5000)
+            // let i = 0
+            // const test = setInterval(() => {
+            //     this.l.Log("hello world")
+            //     i++
+            // }, 1000)
+            setTimeout(() => this.l.Log(debug.traceback("test", 1)), 4000)
         }
 
         constructor() {
-            cm.add_first_tick_callback( () => { this.Init() })
+            cm.add_first_tick_callback( () => this.Init() )
         }
     }
     
