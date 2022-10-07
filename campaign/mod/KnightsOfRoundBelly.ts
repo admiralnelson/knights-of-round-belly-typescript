@@ -3,10 +3,18 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     export const VERSION = 1
     export const ADMKNIGHTSOFTHEROUNDBELLY = "ADMKNIGHTSOFTHEROUNDBELLY:v"+VERSION
 
+
+    const LOUIS_MISSION_KEY    = "admiralnelson_louis_grand_mace_mission_key"
+
     const DUKE_LOUIS_AGENT_KEY = "admnelson_bret_ogre_louis_le_gros_agent_key"
     const HECTOR_AGENT_KEY = "admnelson_bret_ogre_hector_de_maris_agent_key"
 
     const DUKE_LOUIS_FORENAME = "names_name_11382017"; const DUKE_LOUIS_TITLE = "names_name_11382018"
+    
+    const CIVILISED_SKILL_KEY     = "admiralnelson_ogre_civilised_characther_skills_1_skill_key"
+    const OGRE_SKILL_KEY          = "admiralnelson_ogre_being_is_generally_unchivalrous_and_savage_skills_key_background_skill_scripted"
+    const GREATER_GIRTH_SKILL_KEY = "admiralnelson_wh3_main_skill_ogr_tyrant_unique_greater_girth"
+    const LOUIS_MOUNT_SKILL_KEY   = "admiralnelson_louis_mount_unlock_item_skill_key"
 
     class KnightsOfTheRoundBelly {
 
@@ -36,6 +44,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             {faction: "wh_main_brt_bastonne", priority: 11},
         ]
 
+
+
         private bHasTurnsBegan = false
 
         private designatedFaction: IFactionScript | null = null
@@ -43,22 +53,26 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         private LouisLeGrosHimself: ICharacterScript | null = null
 
         SpawnDukeLouisTest(): void {
-            this.l.LogWarn("SpawnDukeLouisTest ok")
-            const [x, y] = cm.find_valid_spawn_location_for_character_from_settlement("wh_main_brt_bretonnia", "wh3_main_combi_region_couronne", false, true)
-            cm.create_force_with_general("wh_main_brt_bretonnia", undefined, "wh3_main_combi_region_couronne", x, y, "general", DUKE_LOUIS_AGENT_KEY, DUKE_LOUIS_FORENAME, DUKE_LOUIS_TITLE, "", "", false, 
+            if(this.designatedFaction == null) {
+                this.l.LogError(`SpawnDukeLouisTest - this.designatedFaction is null`)
+                return
+            }
+            const factionKey = this.designatedFaction.name()
+            const [x, y] = cm.find_valid_spawn_location_for_character_from_settlement(factionKey, "wh3_main_combi_region_couronne", false, true)
+            cm.create_force_with_general(factionKey, undefined, "wh3_main_combi_region_couronne", x, y, "general", DUKE_LOUIS_AGENT_KEY, DUKE_LOUIS_FORENAME, DUKE_LOUIS_TITLE, "", "", false, 
             (cqi) => {
                 this.l.LogWarn(`our lord ${DUKE_LOUIS_AGENT_KEY} has spawn with cqi no ${cqi}`)
                 let theLordHimself = cm.get_character_by_cqi(cqi)
                 if(theLordHimself != false) {
                     theLordHimself = theLordHimself as ICharacterScript
                     this.LouisLeGrosHimself = theLordHimself
+                    cm.trigger_mission(factionKey, LOUIS_MISSION_KEY, true)
+                    common.set_context_value(`peasant_count_${factionKey}`, 8)
+                    const peasantCounts = common.get_context_value(`ScriptObjectContext("peasant_count_${factionKey}").NumericValue`) as number
+                    this.l.LogWarn(`current peasant count is ${peasantCounts}`)
                 }
-                cm.trigger_mission("wh_main_brt_bretonnia", "admiralnelson_louis_grand_mace_mission_key", true)
             })
-        }
-
-        GrantLouisLeGrossHisWeapon(): void {
-            this.LouisLeGrosHimself != null ? cm.force_add_ancillary(this.LouisLeGrosHimself, "admiralnelson_louis_grand_mace_doombringer", true, false) : null
+            this.l.LogWarn("SpawnDukeLouisTest ok")
         }
 
         KillAllOgres(): void {
@@ -77,6 +91,31 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }         
         }
 
+        FindAllOgres(): ICharacterScript[] {
+            if(this.designatedFaction == null) return []
+
+            const faction = this.designatedFaction
+            const res = []
+            const armies = faction.military_force_list()
+            for (let i = 0; i < armies.num_items() ; i++) {
+                const theArmy = armies.item_at(i)
+                if(!theArmy.is_armed_citizenry() && theArmy.has_general()) {
+                    const theGeneral = theArmy.general_character()
+                    //this.l.Log(`iterating ${theGeneral.character_subtype_key()}`)
+                    if(this.OgreChampions.indexOf(theGeneral.character_subtype_key()) >= 0) res.push(theGeneral)
+                }
+            }   
+            return res
+        }
+
+        GiveOgreLessPenaltiesForCompletingGrailQuests(whichOgre: ICharacterScript, whatQuest: "KnightsVow" | "QuestingVow" | "GrailVow"): void {
+            if(this.OgreChampions.indexOf(whichOgre.character_subtype_key()) < 0) {
+                this.l.LogError(`whichOgre param (${whichOgre.character_subtype_key()}) is not defined in this.OgreChampions ${JSON.stringify(this.OgreChampions)} array`)
+                return
+            }
+            this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.character_subtype_key()} whatQuest ${whatQuest}`)
+        }
+
         Init(): void {
             this.FirstTimeSetup()
             this.SetupDesignatedFaction()
@@ -84,6 +123,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             //this.KillAllOgres()
             this.SetupOnSkillAllocated()
             this.SetupOnCharacterRankUp()
+            this.SetupGiveOgreLessPenaltiesForCompletingGrailQuests()
+            this.SetupTestTimer()
         }
 
         FirstTimeSetup(): void {
@@ -93,6 +134,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         SetupDesignatedFaction(): void {
             this.designatedFaction = null
+            this.BretonnianFactionsKeys.sort((a, b) => a.priority - b.priority)
             for (const iterator of this.BretonnianFactionsKeys) {
                 const theFaction = cm.model().world().faction_by_key(iterator.faction)
                 if(!theFaction.is_dead() && theFaction.is_human()) {
@@ -116,6 +158,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return
             }
             this.l.Log(`SetupDesignatedFaction ok - current faction is ${this.designatedFaction.name()}`)
+            const peasantCounts = common.get_context_value(`ScriptObjectContext("peasant_count_${this.designatedFaction.name()}").NumericValue`) as number
+            this.l.LogWarn(`current peasant count is ${peasantCounts}`)
         }
 
         SetupOnSkillAllocated() {
@@ -155,6 +199,69 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 true
             )
             this.l.Log("SetupOnCharacterRankUp ok")
+        }
+
+        SetupGiveOgreLessPenaltiesForCompletingGrailQuests() {
+            core.add_listener(
+                "Admiralnelson SetupGiveOgreLessPenaltiesForCompletingGrailQuests0",
+                "ScriptEventBretonniaKnightsVowCompleted",
+                (context) => {
+                    const theOgreKey = context.character? context.character().character_subtype_key() : ""
+                    return this.OgreChampions.indexOf(theOgreKey) >= 0
+                },
+                (context) => {
+                    const theOgre = context.character? context.character() : null
+                    if(theOgre == null) return
+
+                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(theOgre, "KnightsVow")
+                }, 
+                true
+            )
+            core.add_listener(
+                "Admiralnelson SetupGiveOgreLessPenaltiesForCompletingGrailQuests0",
+                "ScriptEventBretonniaQuestingVowCompleted",
+                (context) => {
+                    const theOgreKey = context.character? context.character().character_subtype_key() : ""
+                    return this.OgreChampions.indexOf(theOgreKey) >= 0
+                },
+                (context) => {
+                    const theOgre = context.character? context.character() : null
+                    if(theOgre == null) return
+
+                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(theOgre, "QuestingVow")
+                }, 
+                true
+            )
+            core.add_listener(
+                "Admiralnelson SetupGiveOgreLessPenaltiesForCompletingGrailQuests2",
+                "ScriptEventBretonniaKnightsVowCompleted",
+                (context) => {
+                    const theOgreKey = context.character? context.character().character_subtype_key() : ""
+                    return this.OgreChampions.indexOf(theOgreKey) >= 0
+                },
+                (context) => {
+                    const theOgre = context.character? context.character() : null
+                    if(theOgre == null) return
+
+                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(theOgre, "GrailVow")
+                }, 
+                true
+            )
+            this.l.Log("SetupGiveOgreLessPenaltiesForCompletingGrailQuests ok")
+        }
+
+        SetupTestTimer(): void {
+            let i = 0
+            const test = setInterval(() => {
+                this.l.Log("hello world")
+                i++
+            }, 1000)
+
+            setTimeout(() => this.l.Log("delayed call"), 1500)
+
+            setTimeout(() => {
+                clearInterval(test)
+            }, 5000)
         }
 
         constructor() {
