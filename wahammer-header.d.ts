@@ -614,6 +614,12 @@ interface ICampaignManager {
      * @param points optional, default value=1 Trait points to add. The underlying force_add_trait function is called for each point added.
      */
     force_add_trait(stringLookup: string, traitKey: string, showMessage?: boolean, points?: number): void
+    /**
+     * Removes the specified trait from the specified character. If the character is past the point of no return in the trait, it will be removed anyway.
+     * @param stringLookup Character lookup string. For more information, see Character Lookups.
+     * @param traitKey Trait key, from the character_traits database table.
+     */
+    force_remove_trait(stringLookup: string, traitKey: string): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
