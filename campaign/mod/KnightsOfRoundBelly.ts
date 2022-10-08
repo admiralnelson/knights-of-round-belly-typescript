@@ -17,6 +17,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     const GREATER_GIRTH_SKILL_KEY = "admiralnelson_wh3_main_skill_ogr_tyrant_unique_greater_girth"
     const LOUIS_MOUNT_SKILL_KEY   = "admiralnelson_louis_mount_unlock_item_skill_key"
 
+    const PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_not_commited_yet_scripted_trait_key"
     const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
 
     class KnightsOfTheRoundBelly {
@@ -56,10 +57,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         ]
 
         private readonly MapTraitLevelToSlotPenaltyReduction = new Map<number, number>([
-            [1 ,  0],
+            [1 , -1],
             [2 , -1],
-            [3 , -1],
-            [4 , -2],
+            [3 , -2],
         ])
 
         private designatedFaction: IFactionScript | null = null
@@ -81,7 +81,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     theLordHimself = theLordHimself as ICharacterScript
                     this.LouisLeGrosHimself = theLordHimself
                     cm.trigger_mission(factionKey, LOUIS_MISSION_KEY, true)
-                    cm.force_add_trait(cm.char_lookup_str(theLordHimself), PEASANT_REDUCTION_TRAIT_KEY, true, 1)
+                    cm.force_add_trait(cm.char_lookup_str(theLordHimself), PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY, true, 1)
                     setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 2000)
                 }
             })
@@ -236,6 +236,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return
             }
             this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.character_subtype_key()} whatQuest ${whatQuest}`)
+            if(whichOgre.has_trait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) cm.force_remove_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
             cm.force_add_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_KEY, true, 1)
             this.CalculatePeasantSlotsUsageAndApplyPenalties()
         }
