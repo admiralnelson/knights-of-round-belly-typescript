@@ -17,6 +17,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     const GREATER_GIRTH_SKILL_KEY = "admiralnelson_wh3_main_skill_ogr_tyrant_unique_greater_girth"
     const LOUIS_MOUNT_SKILL_KEY   = "admiralnelson_louis_mount_unlock_item_skill_key"
 
+    const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
+
     class KnightsOfTheRoundBelly {
 
         private readonly l: Logger = new Logger("AdmiralNelsonKnightsOfTheRoundBelly")
@@ -49,9 +51,16 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             {skill: CIVILISED_SKILL_KEY, penalty: -1 },
             {skill: OGRE_SKILL_KEY, penalty: 6},
             {skill: GREATER_GIRTH_SKILL_KEY, penalty: 2},
-            {skill: LOUIS_MOUNT_SKILL_KEY, penalty: 2}
+            {skill: LOUIS_MOUNT_SKILL_KEY, penalty: 2},
             //the rest of grail skill put it here
         ]
+
+        private readonly MapTraitLevelToSlotPenaltyReduction = new Map<number, number>([
+            [1 ,  0],
+            [2 , -1],
+            [3 , -1],
+            [4 , -2],
+        ])
 
         private designatedFaction: IFactionScript | null = null
 
@@ -72,9 +81,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     theLordHimself = theLordHimself as ICharacterScript
                     this.LouisLeGrosHimself = theLordHimself
                     cm.trigger_mission(factionKey, LOUIS_MISSION_KEY, true)
-                    // common.set_context_value(`peasant_count_${factionKey}`, 8)
-                    // const peasantCounts = common.get_context_value(`ScriptObjectContext("peasant_count_${factionKey}").NumericValue`) as number
-                    // this.l.LogWarn(`current peasant count is ${peasantCounts}`)
+                    cm.force_add_trait(cm.char_lookup_str(theLordHimself), PEASANT_REDUCTION_TRAIT_KEY, true, 1)
                     setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 2000)
                 }
             })
@@ -128,6 +135,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     this.l.Log(`    skill: ${skill.skill}? ${theOgre.has_skill(skill.skill) ? skill.penalty : "nope"}`)
                     totalPeasantsUsedByOgres += theOgre.has_skill(skill.skill) ? skill.penalty : 0
                 }
+                const hasTrait = theOgre.has_trait(PEASANT_REDUCTION_TRAIT_KEY)
+                this.l.Log(`GetPeasantSlotsUsedByOgres - has trait ${PEASANT_REDUCTION_TRAIT_KEY}? ${hasTrait}`)
+                const traitLevel = theOgre.trait_level(PEASANT_REDUCTION_TRAIT_KEY)
+                const traitLevel2PeasantUsageReduction = this.MapTraitLevelToSlotPenaltyReduction.get(traitLevel) ?? 0
+                this.l.Log(`GetPeasantSlotsUsedByOgres - trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2PeasantUsageReduction=${traitLevel2PeasantUsageReduction}`)
+                totalPeasantsUsedByOgres += traitLevel2PeasantUsageReduction
             }
             return totalPeasantsUsedByOgres
         }
@@ -223,6 +236,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return
             }
             this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.character_subtype_key()} whatQuest ${whatQuest}`)
+            cm.force_add_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_KEY, true, 1)
+            this.CalculatePeasantSlotsUsageAndApplyPenalties()
         }
 
         Init(): void {
@@ -342,7 +357,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             )
             core.add_listener(
                 "Admiralnelson SetupGiveOgreLessPenaltiesForCompletingGrailQuests2",
-                "ScriptEventBretonniaKnightsVowCompleted",
+                "ScriptEventBretonniaGrailVowCompleted",
                 (context) => {
                     const theOgreKey = context.character? context.character().character_subtype_key() : ""
                     return this.OgreChampions.indexOf(theOgreKey) >= 0
@@ -394,11 +409,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         
 
         SetupTestTimer(): void {
-            // let i = 0
-            // const test = setInterval(() => {
-            //     this.l.Log("hello world")
-            //     i++
-            // }, 1000)
             setTimeout(() => this.l.Log(debug.traceback("test", 1)), 4000)
         }
 
