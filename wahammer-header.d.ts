@@ -168,7 +168,9 @@ interface ICharacterObservationOptionsScript extends INullScript {
 }
 
 interface IEffectScript extends INullScript {
-
+    key(): string
+    scope(): string
+    value(): number
 }
 
 interface IEffectBundleScript extends INullScript {
@@ -179,7 +181,7 @@ interface IEffectBundleScript extends INullScript {
 }
 
 interface ICustomEffectBundleScript extends INullScript {
-    
+
 }
 
 interface ICaravanSystemScript extends INullScript {
@@ -523,6 +525,10 @@ interface ICcoScriptObject {
     call_context_command(this:void, contextQuery: string, ...args: any[]): void
 }
 
+interface IGameInterface {
+
+}
+
 interface ICampaignManager {
     null_interface(): any
     /** a function will fire right after loading has finished  */
@@ -535,7 +541,8 @@ interface ICampaignManager {
     shuffle_table(list: Array<any>): void
     /** forcefully add skill to a character. don't know what stringLookup is? search this in manual: Character Lookups */
     force_add_skill(stringLookUp: string, skillKey: string): void
-    char_lookup_str(character: ICharacterScript): string
+    /** Various game interface functions lookup characters using a lookup string. This function converts a character into a lookup string that can be used by code functions to find that same character. It may also be supplied a character cqi in place of a character object. */
+    char_lookup_str(whichCQIorWho: ICharacterScript | number): string
     set_saved_value(key: string, value: any): void
     get_saved_value(key: string): unknown 
     /** returns current turn number */
@@ -597,6 +604,8 @@ interface ICampaignManager {
      * @param contextString optional, default value="" Optional context string to trigger with the event.
      */
     add_turn_countdown_event(factionKey: string, turns: number, event: string, contextString: string): void
+    /** direct access to C++ game interface */
+    get_game_interface(): IGameInterface
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
