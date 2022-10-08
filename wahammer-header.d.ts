@@ -606,6 +606,14 @@ interface ICampaignManager {
     add_turn_countdown_event(factionKey: string, turns: number, event: string, contextString: string): void
     /** direct access to C++ game interface */
     get_game_interface(): IGameInterface
+    /**
+     * Forceably adds an trait to a character. This wraps the cm:force_add_trait function on the underlying episodic scripting interface, but adds validation and output. This output will be shown in the Lua - Traits debug console spool. 
+     * @param stringLookup Character string of the target character, using the standard character string lookup system.
+     * @param traitKey Trait key to add.
+     * @param showMessage optional, default value=false Show message.
+     * @param points optional, default value=1 Trait points to add. The underlying force_add_trait function is called for each point added.
+     */
+    force_add_trait(stringLookup: string, traitKey: string, showMessage?: boolean, points?: number): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
