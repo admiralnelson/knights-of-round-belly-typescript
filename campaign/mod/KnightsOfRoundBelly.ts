@@ -16,7 +16,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     const OGRE_SKILL_KEY          = "admiralnelson_ogre_being_is_generally_unchivalrous_and_savage_skills_key_background_skill_scripted"
     const GREATER_GIRTH_SKILL_KEY = "admiralnelson_wh3_main_skill_ogr_tyrant_unique_greater_girth"
     const LOUIS_MOUNT_SKILL_KEY   = "admiralnelson_louis_mount_unlock_item_skill_key"
-
+    
     const PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_not_commited_yet_scripted_trait_key"
     const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
 
@@ -50,17 +50,31 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         private readonly PeasantSlotPenaltySkills = [
             {skill: CIVILISED_SKILL_KEY, penalty: -1 },
-            {skill: OGRE_SKILL_KEY, penalty: 6},
+            {skill: OGRE_SKILL_KEY, penalty: 5},
             {skill: GREATER_GIRTH_SKILL_KEY, penalty: 2},
             {skill: LOUIS_MOUNT_SKILL_KEY, penalty: 2},
             //the rest of grail skill put it here
         ]
+
+        private readonly ChivalryPointModifierSkills = [
+            {skill: OGRE_SKILL_KEY, chivalry: -40}
+        ]
+
+        private readonly MapTraitLevelToChivalryPoints = new Map<number, number>([
+            [1 , 10],
+            [2 , 10],
+            [3 , 40],
+        ])
 
         private readonly MapTraitLevelToSlotPenaltyReduction = new Map<number, number>([
             [1 , -1],
             [2 , -1],
             [3 , -2],
         ])
+
+        private cachedPeasantQuota = {
+            used: 0, free: 0
+        }
 
         private designatedFaction: IFactionScript | null = null
 
@@ -134,15 +148,28 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 for (const skill of this.PeasantSlotPenaltySkills) {
                     this.l.Log(`    skill: ${skill.skill}? ${theOgre.has_skill(skill.skill) ? skill.penalty : "nope"}`)
                     totalPeasantsUsedByOgres += theOgre.has_skill(skill.skill) ? skill.penalty : 0
-                }
-                const hasTrait = theOgre.has_trait(PEASANT_REDUCTION_TRAIT_KEY)
-                this.l.Log(`GetPeasantSlotsUsedByOgres - has trait ${PEASANT_REDUCTION_TRAIT_KEY}? ${hasTrait}`)
+                }                
                 const traitLevel = theOgre.trait_level(PEASANT_REDUCTION_TRAIT_KEY)
-                const traitLevel2PeasantUsageReduction = this.MapTraitLevelToSlotPenaltyReduction.get(traitLevel) ?? 0
-                this.l.Log(`GetPeasantSlotsUsedByOgres - trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2PeasantUsageReduction=${traitLevel2PeasantUsageReduction}`)
+                let traitLevel2PeasantUsageReduction = this.MapTraitLevelToSlotPenaltyReduction.get(traitLevel) ?? 0
+                if(theOgre.has_trait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) traitLevel2PeasantUsageReduction++
+                this.l.Log(`GetPeasantSlotsUsedByOgres - trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2PeasantUsageReduction=${traitLevel2PeasantUsageReduction} PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY=${theOgre.has_trait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)}`)
+
                 totalPeasantsUsedByOgres += traitLevel2PeasantUsageReduction
             }
             return totalPeasantsUsedByOgres
+        }
+
+        ClearAllPenalties(): void {
+            if(this.designatedFaction == null) {
+                this.l.LogError(`ClearAllPenalties - this.designatedFaction == null, perhaps no bretonnia faction left?`)
+                return
+            }
+            const effectBundles = this.designatedFaction.effect_bundles()
+            const factionKey = this.designatedFaction.name()
+            for (let i = 0; i < effectBundles.num_items(); i++) {
+                const effectBundle = effectBundles.item_at(i)
+                if(effectBundle.key().startsWith(PEASANTS_EFFECT_PREFIX)) cm.remove_effect_bundle(effectBundle.key(), factionKey)
+            }
         }
 
         GetAndUpdateCurrentPeasantSlotsUsage(): [peasantCount: number, peasantCap: number] {
@@ -167,17 +194,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
             const factionKey = this.designatedFaction.name()
             const [currentPeasantUsageCount, freePeasantCount] = this.GetAndUpdateCurrentPeasantSlotsUsage()
+            this.cachedPeasantQuota = {used: currentPeasantUsageCount, free: freePeasantCount }
             const peasantsAllocatedByOgre = this.GetPeasantSlotsUsedByOgres()
             const totalAllocatedPeasants = currentPeasantUsageCount + peasantsAllocatedByOgre
             common.set_context_value(`peasant_count_${factionKey}`, totalAllocatedPeasants)
             this.l.Log(`CalculatePeasantSlotsUsage currentPeasantUsageCount=${currentPeasantUsageCount} peasantsAllocatedByOgre=${peasantsAllocatedByOgre} totalAllocatedPeasants=${totalAllocatedPeasants}`)
 
             //clear all penalties first
-            const effectBundles = this.designatedFaction.effect_bundles()
-            for (let i = 0; i < effectBundles.num_items(); i++) {
-                const effectBundle = effectBundles.item_at(i)
-                if(effectBundle.key().startsWith(PEASANTS_EFFECT_PREFIX)) cm.remove_effect_bundle(effectBundle.key(), factionKey)
-            }
+            this.ClearAllPenalties()
 
             //apply the penalties
             let peasantPercent = (totalAllocatedPeasants / freePeasantCount) * 100
@@ -217,6 +241,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 localStorage.setItem(`peasants_ratio_positive_${factionKey}`, false)
             } else {
                 this.l.Log("Peasant Percent Final: 0")
+                this.ClearAllPenalties()
                 cm.apply_effect_bundle(`${PEASANTS_EFFECT_PREFIX}0`, factionKey, 0)
             
                 if (localStorage.getItem("ScriptEventNegativePeasantEconomy") && 
@@ -238,20 +263,96 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.character_subtype_key()} whatQuest ${whatQuest}`)
             if(whichOgre.has_trait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) cm.force_remove_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
             cm.force_add_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_KEY, true, 1)
+            if(whatQuest == "QuestingVow" && whichOgre.character_subtype_key() == DUKE_LOUIS_AGENT_KEY) {
+                
+                
+            }
+            const x = cco("sdsadsadsadsa")
+            
+            
             this.CalculatePeasantSlotsUsageAndApplyPenalties()
+        }
+
+        DisableLouisMountSkillNode() {
+            //check if this Louis or not?
+            const theObject = find_uicomponent(core.get_ui_root(), 
+                "character_details_panel", 
+                "character_context_parent")
+
+            if(theObject) {
+                const context = theObject.GetContextObject("CcoCampaignCharacter")
+                const agentKey = context?.Call("AgentSubtypeRecordContext().Key") as string
+                if(agentKey != DUKE_LOUIS_AGENT_KEY) return
+
+                const cqi = context?.Call(`CQI()`) as number
+                const theCharacter = cm.get_character_by_cqi(cqi)
+                if(theCharacter != false) {
+                    if(theCharacter.trait_level(PEASANT_REDUCTION_TRAIT_KEY) >= 2) return
+                }
+            }
+
+            //disable his mount skill
+            const theSkillButton = find_uicomponent(core.get_ui_root(), 
+                "character_details_panel", 
+                "character_context_parent", 
+                "tab_panels", 
+                "skills_subpanel", 
+                "listview", 
+                "list_clip", 
+                "list_box", 
+                "chain0", 
+                "chain", 
+                "admiralnelson_louis_mount_unlock_item_skill_key", 
+                "card")
+            if(theSkillButton) {
+                this.l.LogWarn(theSkillButton.CurrentState())
+                theSkillButton.SetState("locked_rank")
+            }
+
+            //disable AI skill auto manage on Louis only.
+            const autoManagementButton = find_uicomponent(core.get_ui_root(),  
+                "character_details_panel", 
+                "character_context_parent", 
+                "tab_panels", 
+                "skills_subpanel",
+                "auto_management_holder")
+            if(autoManagementButton) {
+                autoManagementButton.PropagateVisibility(false)
+            }
+        }
+
+        GetOgresChivalryPointsFromModTraits(): number {
+            const ogres = this.FindAllOgres()
+            let totalChivalryPoints = 0
+            for (const iterator of ogres) {
+                this.l.Log(`GetOgresChivalryPointsFromModTraits - iterating ${iterator.character_subtype_key()}`)
+                for (const skillmod of this.ChivalryPointModifierSkills) {
+                    if(iterator.has_skill(skillmod.skill)) {
+                        totalChivalryPoints += skillmod.chivalry
+                        this.l.Log(`                              iterator.has_skill ${skillmod.skill} ${iterator.has_skill(skillmod.skill)} => ${skillmod.chivalry}`)
+                    }
+                }
+                const traitLevel = iterator.trait_level(PEASANT_REDUCTION_TRAIT_KEY)
+                const traitLevel2ChivalryPoints = this.MapTraitLevelToSlotPenaltyReduction.get(traitLevel) ?? 0
+                this.l.Log(`                                      trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2ChivalryPoints=${traitLevel2ChivalryPoints}`)
+                totalChivalryPoints += traitLevel2ChivalryPoints
+            }
+            return totalChivalryPoints
         }
 
         Init(): void {
             this.FirstTimeSetup()
             this.SetupDesignatedFaction()
-            this.SpawnDukeLouisTest()
             //this.KillAllOgres()
+            this.SetupOnOgreChampionSpawned()
             this.SetupOnSkillAllocated()
             this.SetupOnCharacterRankUp()
             this.SetupGiveOgreLessPenaltiesForCompletingGrailQuests()
             this.SetupOnFactionTurnStart()
             this.SetupOnFactionTurnEnd()
             this.SetupTestTimer()
+            this.SetupOnCharacterLevelPaneDisableLouisMount()
+            this.SpawnDukeLouisTest()
         }
 
         FirstTimeSetup(): void {
@@ -287,6 +388,22 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.l.Log(`SetupDesignatedFaction ok - current faction is ${this.designatedFaction.name()}`)
             const peasantCounts = common.get_context_value(`ScriptObjectContext("peasant_count_${this.designatedFaction.name()}").NumericValue`) as number
             this.l.LogWarn(`current peasant count is ${peasantCounts}`)
+        }
+
+        SetupOnOgreChampionSpawned() {
+            core.add_listener(
+                "Admiralnelson OnOgreChampionSpawned",
+                "CharacterRecruited",
+                (context) => {
+                    const character = context.character ? context.character().character_subtype_key(): "none"
+                    return this.OgreChampions.indexOf(character) >= 0
+                },
+                (_) => {
+                    this.l.LogWarn(`GetOgresChivalryPointsFromModTraits ${this.GetOgresChivalryPointsFromModTraits()}`)
+                },
+                true
+            )
+            this.l.Log("SetupOnOgreChampionSpawned ok")
         }
 
         SetupOnSkillAllocated() {
@@ -406,6 +523,34 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             )
 
             this.l.Log("SetupOnFactionTurnEnd ok")
+        }
+
+        SetupOnCharacterLevelPaneDisableLouisMount() {
+            core.add_listener(
+                "admiralnelson SetupOnCharacterLevelPaneDisableLouisMount",
+                "PanelOpenedCampaign",
+                (context) => context.string ? (context.string == "character_details_panel") : false,
+                (_) => {
+                    this.l.LogWarn(`character_details_panel was opened`)
+                    this.DisableLouisMountSkillNode()
+                },
+                true
+            )
+            core.add_listener(
+                "admiralnelson SetupOnCharacterLevelPaneDisableLouisMount 2",
+                "ComponentLClickUp",
+                (context) => {
+                    if(context.string == null) return false
+                    return context.string == "button_cycle_right" || context.string == "button_cycle_left"
+                },                    
+                (_) => {
+                    this.l.LogWarn(`ComponentLClickUp was clicked`)
+                    this.DisableLouisMountSkillNode()
+                },
+                true
+            )
+            
+            this.l.Log(`SetupOnCharacterLevelPaneDisableLouisMount ok`)
         }
         
 
