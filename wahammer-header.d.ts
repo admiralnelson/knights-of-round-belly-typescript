@@ -539,8 +539,17 @@ interface ICampaignManager {
     random_sort(list: Array<any>): Array<any>
     random_sort_copy(list: Array<any>): Array<any>
     shuffle_table(list: Array<any>): void
-    /** forcefully add skill to a character. don't know what stringLookup is? search this in manual: Character Lookups */
+    /** forcefully add skill to a character. don't know what stringLookup is? search this in manual: Character Lookups 
+     * @param stringLookUp Character lookup string. For more information, see Character Lookups.
+     * @param skillKey Skill key, from the character_skills table.
+    */
     force_add_skill(stringLookUp: string, skillKey: string): void
+    /**
+     * Remove a skill point from the specified character and skill. Returns true if successful.
+     * @param stringLookUp Character lookup string. For more information, see Character Lookups.
+     * @param skillKey Skill key, from the character_skills table.
+     */
+    remove_skill_point(stringLookUp: string, skillKey: string): true
     /** Various game interface functions lookup characters using a lookup string. This function converts a character into a lookup string that can be used by code functions to find that same character. It may also be supplied a character cqi in place of a character object. */
     char_lookup_str(whichCQIorWho: ICharacterScript | number): string
     set_saved_value(key: string, value: any): void
@@ -651,6 +660,7 @@ type Callback = {
 interface ICore {
     add_listener(listenerName: string, eventName: string, conditionalTest: ConditionalTest | Boolean, callback: Callback, persistsAfterCall :boolean): void
     trigger_event(whatEvent: string): void
+    get_ui_root(): IUIComponent
 }
 
 declare const cm: ICampaignManager

@@ -1,8 +1,8 @@
 /* eslint-disable */
 /// <reference path="wahammer-header.d.ts" />
 
-declare function find_uicomponent(parentComponent?: IUIComponent, ...componentNames: string[]): IUIComponent
-declare function uic_pairs(parentComponent: IUIComponent): Iterable<IUIComponent>
+declare function find_uicomponent(this:void, parentComponent?: IUIComponent, ...componentNames: string[]): IUIComponent | false
+declare function uic_pairs(this:void, parentComponent: IUIComponent): Iterable<IUIComponent>
 
 
 interface IUIComponent {
@@ -26,4 +26,17 @@ interface IUIComponent {
      * Returns the text on the current state of the uicomponent along with its dimensions. This text will be localised.
      * */
     GetStateText(): LuaMultiReturn<[localisedUicomponentText: string, stringtableKey: string]>
+    /**
+     * Sets the state of the uicomponent to the specified state name.
+     * @param stateName  state name
+     */
+    SetState(stateName: string): boolean
+    /** Returns the name of the current state of the uicomponent. */
+    CurrentState(): string
+    /** Sets the visibility state of this uicomponent. */
+    SetVisible(visible: boolean): void
+    /** Sets the visibility state of this uicomponent and all its children */
+    PropagateVisibility(visible: boolean): void
+    /** Gets the context object (cco lua type) for the supplied type that is stored on the component */
+    GetContextObject(contextTypeId: string): IComponentContextObject | null
 }
