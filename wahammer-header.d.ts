@@ -629,6 +629,25 @@ interface ICampaignManager {
      * @param traitKey Trait key, from the character_traits database table.
      */
     force_remove_trait(stringLookup: string, traitKey: string): void
+    /**
+     * Spawns an agent of the specified type at the specified logical position.
+     * @param faction Faction interface for the agent's faction.
+     * @param x x logical co-ordinate.
+     * @param y y logical co-ordinate.
+     * @param agentTypeKey Agent type key, from the agents table.
+     * @param agentSubtypeKey optional, default value="" Agent subtype key, from the agent_subtypes table. This can be omitted.
+     */
+    spawn_agent_at_position(faction: IFactionScript, x: number, y: number,  agentTypeKey: string,  agentSubtypeKey?: string): void
+    /**
+     * Replace the name of a character with a set of names from the database. Names must be specified by full localised text key, in the [table]_[key]_[field] format. Don't use this function on rebel characters.
+If a value is not required for a particular name type then a blank string may be supplied for that parameter.
+     * @param character Target character.
+     * @param forename Localised forename key, in the `[table]_[key]_[field]` format. example: `"names_name_1053468021"`
+     * @param surname  Localised surname key, in the `[table]_[key]_[field]` format.
+     * @param clanName Localised clan name key, in the `[table]_[key]_[field]` format.
+     * @param otherName Localised other name key, in the `[table]_[key]_[field]` format.
+     */
+    change_character_localised_name(character: ICharacterScript, forename: string, surname: string,  clanName: string,  otherName: string): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
