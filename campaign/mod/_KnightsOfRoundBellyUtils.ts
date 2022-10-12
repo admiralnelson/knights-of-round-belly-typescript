@@ -19,7 +19,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         if(v <= min) return min
         return v
     }
+    export function RandomString(len: number = 10): string {
+        let outString: string = '';
+        const inOptions: string = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        for (let i = 0; i < len; i++) {
+            outString += inOptions.charAt(Math.floor(Math.random() * inOptions.length));
+        }
 
+        return outString;
+    }
     
     class TimedCallback {
         private id = 0
