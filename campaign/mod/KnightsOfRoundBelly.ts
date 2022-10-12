@@ -102,6 +102,17 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.l.LogWarn("SpawnDukeLouisTest ok")
         }
 
+        SpawnHectorTest(): void {
+            if(this.designatedFaction == null) {
+                this.l.LogError(`SpawnHectorTest - this.designatedFaction is null`)
+                return
+            }
+            const factionKey = this.designatedFaction.name()
+            const [x, y] = cm.find_valid_spawn_location_for_character_from_settlement(factionKey, "wh3_main_combi_region_couronne", false, true)
+            cm.spawn_agent_at_position(this.designatedFaction, x, y, "champion", HECTOR_AGENT_KEY)
+            this.l.LogWarn(`SpawnHectorTest ok`)
+        }
+
         KillAllOgres(): void {
             if(this.designatedFaction == null) {
                 this.l.LogError(`KillAllOgres: cant execute this.designatedFaction is null`)
@@ -131,9 +142,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             for (let i = 0; i < armies.num_items() ; i++) {
                 const theArmy = armies.item_at(i)
                 if(!theArmy.is_armed_citizenry() && theArmy.has_general()) {
-                    const theGeneral = theArmy.general_character()
-                    //this.l.Log(`iterating ${theGeneral.character_subtype_key()}`)
-                    if(this.OgreChampions.indexOf(theGeneral.character_subtype_key()) >= 0) res.push(theGeneral)
+                    const characterList = theArmy.character_list()
+                    for (let j = 0; j < characterList.num_items(); j++) {
+                        const theCharacter = characterList.item_at(j)
+                        this.l.Log(`iterating ${theCharacter.character_subtype_key()}`)
+                        if(this.OgreChampions.indexOf(theCharacter.character_subtype_key()) >= 0) res.push(theCharacter)
+                    }
                 }
             }   
             return res
@@ -263,13 +277,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.character_subtype_key()} whatQuest ${whatQuest}`)
             if(whichOgre.has_trait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) cm.force_remove_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
             cm.force_add_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_KEY, true, 1)
-            if(whatQuest == "QuestingVow" && whichOgre.character_subtype_key() == DUKE_LOUIS_AGENT_KEY) {
-                
-                
-            }
-            const x = cco("sdsadsadsadsa")
-            
-            
             this.CalculatePeasantSlotsUsageAndApplyPenalties()
         }
 
@@ -279,11 +286,27 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 "character_details_panel", 
                 "character_context_parent")
 
+            //disable AI skill auto manage on Louis only.
+            const autoManagementButton = find_uicomponent(core.get_ui_root(),  
+                "character_details_panel", 
+                "character_context_parent", 
+                "tab_panels", 
+                "skills_subpanel",
+                "auto_management_holder")
+
             if(theObject) {
                 const context = theObject.GetContextObject("CcoCampaignCharacter")
                 const agentKey = context?.Call("AgentSubtypeRecordContext().Key") as string
-                if(agentKey != DUKE_LOUIS_AGENT_KEY) return
+                if(agentKey != DUKE_LOUIS_AGENT_KEY) {
+                    if(autoManagementButton) autoManagementButton.PropagateVisibility(true)
+                    return
+                }
 
+                //if louis
+
+                //hide automanage button
+                if(autoManagementButton) autoManagementButton.PropagateVisibility(false)
+                
                 const cqi = context?.Call(`CQI()`) as number
                 const theCharacter = cm.get_character_by_cqi(cqi)
                 if(theCharacter != false) {
@@ -309,16 +332,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 theSkillButton.SetState("locked_rank")
             }
 
-            //disable AI skill auto manage on Louis only.
-            const autoManagementButton = find_uicomponent(core.get_ui_root(),  
-                "character_details_panel", 
-                "character_context_parent", 
-                "tab_panels", 
-                "skills_subpanel",
-                "auto_management_holder")
-            if(autoManagementButton) {
-                autoManagementButton.PropagateVisibility(false)
-            }
         }
 
         GetOgresChivalryPointsFromModTraits(): number {
@@ -353,6 +366,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupTestTimer()
             this.SetupOnCharacterLevelPaneDisableLouisMount()
             this.SpawnDukeLouisTest()
+            this.SpawnHectorTest()
         }
 
         FirstTimeSetup(): void {
