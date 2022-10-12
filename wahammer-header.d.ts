@@ -37,7 +37,13 @@ interface IListScript {
 }
 
 interface IRegionManagerScript extends INullScript {
-
+    model(): IModelScript
+    region_list(): IRegionListScript
+    faction_region_list(factionKey: string): IRegionListScript
+    region_by_key(regionKey: string): IRegionScript
+    settlement_by_key(settlementKey: string): ISettlementScript
+    slot_by_key(slotKey: string): ISlotScript
+    resource_exists_anywhere(resourceKey: string): boolean
 }
 
 interface ISeaManagerScript extends INullScript {
@@ -115,6 +121,10 @@ interface IFactionListScript extends IListScript {
     item_at(index: number): IFactionScript
 }
 
+interface IRegionListScript extends IListScript {
+
+}
+
 interface IUniqueAgentDetailsListScript extends IListScript {
 
 }
@@ -136,6 +146,10 @@ interface IProvinceScript extends INullScript {
 }
 
 interface ISettlementScript extends INullScript {
+
+}
+
+interface ISlotScript extends INullScript {
 
 }
 
@@ -523,6 +537,8 @@ interface ICcoScriptObject {
     get_context_value(this:void, contextQuery: string, functionId?: string | number | boolean): unknown | null
     set_context_value(this:void, contextQuery: string, arg?: string | number | boolean): void
     call_context_command(this:void, contextQuery: string, ...args: any[]): void
+    /** Retrieves a localised string from the database by its full localisation key. This is in the form `[table]_[field]_[record_key]`. If the lookup fails, an empty string is returned. */
+    get_localised_string(localisationKey: string): string | ""
 }
 
 interface IGameInterface {
@@ -640,7 +656,7 @@ interface ICampaignManager {
     spawn_agent_at_position(faction: IFactionScript, x: number, y: number,  agentTypeKey: string,  agentSubtypeKey?: string): void
     /**
      * Replace the name of a character with a set of names from the database. Names must be specified by full localised text key, in the [table]_[key]_[field] format. Don't use this function on rebel characters.
-If a value is not required for a particular name type then a blank string may be supplied for that parameter.
+     * If a value is not required for a particular name type then a blank string may be supplied for that parameter.
      * @param character Target character.
      * @param forename Localised forename key, in the `[table]_[key]_[field]` format. example: `"names_name_1053468021"`
      * @param surname  Localised surname key, in the `[table]_[key]_[field]` format.
@@ -648,6 +664,12 @@ If a value is not required for a particular name type then a blank string may be
      * @param otherName Localised other name key, in the `[table]_[key]_[field]` format.
      */
     change_character_localised_name(character: ICharacterScript, forename: string, surname: string,  clanName: string,  otherName: string): void
+    /**
+     * Swap a model for a specific character. Same as add_unit_model_overrides, but doesn't use the character lookup.
+     * @param character Character interface.
+     * @param artSetKey Model key, from the campaign_character_art_sets database table.
+     */
+    add_character_model_override(character: ICharacterScript, artSetKey: string): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
