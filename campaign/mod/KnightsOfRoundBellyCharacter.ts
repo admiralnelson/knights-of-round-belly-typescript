@@ -20,7 +20,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         (theChampionHimself: Champion, reason: "CreateFromKey" | "WrappingExistingObject"): void
     }
 
-    class Character {
+    export function FindCharacter(cqiNo: number): Character | null {
+        const characterObject = cm.get_character_by_cqi(cqiNo)
+        if(characterObject == false) return null
+        return new Character({characterObject: characterObject})
+    }
+
+    export class Character {
         protected characterObj: ICharacterScript | null = null
 
         constructor(options: CharacterCreationOptions) {
@@ -114,8 +120,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         }
 
-        public AddTrait(traitKey: string, level: number = 1, showNotification: boolean = true) {
+        public AddTrait(traitKey: string, showNotification: boolean = true, level: number = 1,) {
             cm.force_add_trait(cm.char_lookup_str(this.GetInternalInterface()), traitKey, showNotification, level)
+        }
+
+        public RemoveTrait(traitKey: string) {
+            cm.force_remove_trait(cm.char_lookup_str(this.GetInternalInterface()), traitKey)
         }
 
         public ChangeModelAppearance(campaignArtSetKey: string) {
@@ -174,22 +184,40 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return this.GetFactionInterface().name()
         }
 
-        
         public get CqiNo() : number {
             return this.GetInternalInterface().command_queue_index()
         }
 
         public IsValid(): boolean {
-            return !this.GetFactionInterface().is_null_interface()
+            return (this.characterObj != null) && !this.characterObj.is_null_interface()
+        }
+
+        public HasSkill(skillKey: string): boolean {
+            return this.GetInternalInterface().has_skill(skillKey)
         }
         
+        public HasTrait(traitKey: string): boolean {
+            return this.GetInternalInterface().has_trait(traitKey)
+        }
+
+        public HasAnciliary(anciliaryKey: string): boolean {
+            return this.GetInternalInterface().has_ancillary(anciliaryKey)
+        }
+
+        public GetTraitLevel(traitKey: string): number {
+            return this.GetInternalInterface().trait_level(traitKey)
+        }
 
         public Kill() {
             cm.kill_character_and_commanded_unit(cm.char_lookup_str(this.GetInternalInterface()), false)
         }
 
-        public IsEqual(characterA: Character, characterB: Character): boolean {
-            return characterA.CqiNo == characterB.CqiNo
+        public IsEqual(otherCharacter: Character): boolean {
+            return this.CqiNo == otherCharacter.CqiNo
+        }
+
+        public toString(): string {
+            return this.SubtypeKey
         }
     }
 
