@@ -14,11 +14,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     
         public LogError(s: string): void
         {
-            const traceback = debug.traceback("", 2).toString()
-            PrintError != null ? PrintError(`${this._name}: ${s}`) : out(`${this._name} ERROR ${s}`)
-            this.LogWarn("================")
+            const traceback = debug.traceback("", 2)
+            PrintError != null ? PrintError(`${this._name}: ${s} \n`) : out(`${this._name} ERROR ${s}`)
+            this.LogWarn("================\n")
             this.LogWarn(`${traceback} \n`)
-            this.LogWarn("================")
+            this.LogWarn("================\n")
         }    
     }
 }
