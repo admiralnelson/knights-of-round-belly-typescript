@@ -16,6 +16,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     type CallbackLordCreated = { 
         (theLordHimself: Lord, reason: "CreateFromKey" | "WrappingExistingObject"): void
     }
+    type CallbackChampionCreated = { 
+        (theChampionHimself: Champion, reason: "CreateFromKey" | "WrappingExistingObject"): void
+    }
 
     class Character {
         protected characterObj: ICharacterScript | null = null
@@ -53,11 +56,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 const factionKey = options.factionKey
 
                 //check if lord successfully spawned, otherwise tell an error
-                const traceback = debug.traceback("", 1)
+                const traceback = debug.traceback("", 2)
                 const throwErrorLatent = setTimeout(()=> {
-                    CharacterLogger.LogError(`failed to spawn lord ${options.agentSubtypeKey}`)
+                    CharacterLogger.LogError(`failed to spawn character ${options.agentSubtypeKey}`)
                     CharacterLogger.LogWarn(`previous tracebacks: \n${traceback}`)
-                }, 500)
+                }, 200)
                 //if the character did spawn make sure to store it into internal variable this.characterObj
                 core.add_listener(
                     `create agent ${options.agentSubtypeKey} ${RandomString()}`,
@@ -109,66 +112,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return
             }
 
-        }
-    }
-
-    type LordCreationOptions = {
-        characterObject?: ICharacterScript,
-        cqi?: number,
-        agentKey?: string,
-        factionKey?: string,
-        regionKey?: string,
-        lordCreatedCallback?: CallbackLordCreated
-    }
-
-    export class Lord extends Character {
-        private lordCreatedCallback: CallbackLordCreated | undefined = undefined
-
-        /**
-         * 
-         * @param options to create Lord from scratch, following attribute `agentKey`, `factionKey`, `regionKey` must be supplied to `options`. `lordCreatedCallback` is a callback when character spawned successfully   
-         * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`
-         */
-        constructor(options?: LordCreationOptions) {
-            if(options == null) return
-            if(options.agentKey && options.characterObject == null) {
-                core.add_listener(
-                    `create lord ${options.agentKey} ${RandomString()}`,
-                    "CharacterRecruited",
-                    (context) => {
-                        const theChar = context.character ? context.character() : null
-                        if(theChar == null) return false
-    
-                        return theChar.character_subtype_key() == options.agentKey
-                    },
-                    (context) => {
-                        const theChar = context.character ? context.character() : null
-                        if(theChar == null) return
-                        if(this.lordCreatedCallback) this.lordCreatedCallback(this, "CreateFromKey")
-                    }, 
-                    false
-                )
-            }
-            if(options.cqi) {
-                super({})
-                const theChar = cm.get_character_by_cqi(options.cqi)
-                if(theChar) this.characterObj = theChar; else {
-                    CharacterLogger.LogError(`this cqi ${options.cqi} is invalid cqi`)
-                    throw(`this cqi ${options.cqi} is invalid cqi`)
-                }
-
-            } else {
-                super({
-                    characterObject: options.characterObject, 
-                    factionKey: options.factionKey,
-                    regionKey: options.regionKey,
-                    agentSubtypeKey: options.agentKey })
-            }
-            this.lordCreatedCallback = options.lordCreatedCallback
-            if(this.characterObj) {
-                if(this.lordCreatedCallback) this.lordCreatedCallback(this, "WrappingExistingObject")
-            }
-            
         }
 
         public AddTrait(traitKey: string, level: number = 1, showNotification: boolean = true) {
@@ -225,6 +168,159 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         public get FactionKey(): string {
             return this.GetFactionInterface().name()
+        }
+
+        
+        public get CqiNo() : number {
+            return this.GetInternalInterface().command_queue_index()
+        }
+        
+
+        public Kill() {
+            cm.kill_character_and_commanded_unit(cm.char_lookup_str(this.GetInternalInterface()), false)
+        }
+
+        public IsEqual(characterA: Character, characterB: Character): boolean {
+            return characterA.CqiNo == characterB.CqiNo
+        }
+    }
+
+    type LordCreationOptions = {
+        characterObject?: ICharacterScript,
+        cqi?: number,
+        agentKey?: string,
+        factionKey?: string,
+        regionKey?: string,
+        lordCreatedCallback?: CallbackLordCreated
+    }
+
+    export class Lord extends Character {
+        private lordCreatedCallback: CallbackLordCreated | undefined = undefined
+
+        /**
+         * 
+         * @param options to create Lord from scratch, following attribute `agentKey`, `factionKey`, `regionKey` must be supplied to `options`. `lordCreatedCallback` is a callback when character spawned successfully   
+         * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`
+         */
+        constructor(options?: LordCreationOptions) {
+            if(options == null) return
+            if(options.agentKey && options.characterObject == null) {
+                core.add_listener(
+                    `create lord ${options.agentKey} ${RandomString()}`,
+                    "CharacterRecruited",
+                    (context) => {
+                        const theChar = context.character ? context.character() : null
+                        if(theChar == null) return false
+    
+                        return theChar.character_subtype_key() == options.agentKey
+                    },
+                    (context) => {
+                        const theChar = context.character ? context.character() : null
+                        if(theChar == null) return
+                        if(this.lordCreatedCallback) this.lordCreatedCallback(this, "CreateFromKey")
+                    }, 
+                    false
+                )
+            }
+            if(options.cqi) {
+                super({})
+                const theChar = cm.get_character_by_cqi(options.cqi)
+                if(theChar) this.characterObj = theChar; else {
+                    CharacterLogger.LogError(`this cqi ${options.cqi} is invalid cqi`)
+                    throw(`this cqi ${options.cqi} is invalid cqi`)
+                }
+
+            } else {
+                super({
+                    characterObject: options.characterObject, 
+                    factionKey: options.factionKey,
+                    regionKey: options.regionKey,
+                    agentSubtypeKey: options.agentKey 
+                })
+            }
+            this.lordCreatedCallback = options.lordCreatedCallback
+            if(this.characterObj) {
+                if(this.lordCreatedCallback) this.lordCreatedCallback(this, "WrappingExistingObject")
+            }
+            
+        }
+
+        public AddTroops(mainUnitKey: string[]) {
+            for (const iterator of mainUnitKey) {
+                cm.grant_unit_to_character(cm.char_lookup_str(this.GetInternalInterface()), iterator)
+            }
+        }
+
+        public Destroy() {
+            cm.kill_character_and_commanded_unit(cm.char_lookup_str(this.GetInternalInterface()), true)
+        }
+        
+    }
+
+    type ChampionCreationOptions = {
+        characterObject?: ICharacterScript,
+        cqi?: number,
+        agentKey?: string,
+        factionKey?: string,
+        regionKey?: string,
+        agentType?: string
+        championCreatedCallback?: CallbackChampionCreated
+    }
+    export class Champion extends Character {
+        private championCreatedCallback: CallbackChampionCreated | undefined = undefined
+
+        /**
+         * 
+         * @param options to create Champion from scratch, following attribute `agentKey`, `factionKey`, `regionKey`, `agentType` must be supplied to `options`. `championCreatedCallback` is a callback when character spawned successfully   
+         * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`
+         */
+        constructor(options?: ChampionCreationOptions) {
+            if(options == null) return
+            if(options.agentKey && options.characterObject == null) {
+                core.add_listener(
+                    `create champion ${options.agentKey} ${RandomString()}`,
+                    "CharacterRecruited",
+                    (context) => {
+                        const theChar = context.character ? context.character() : null
+                        if(theChar == null) return false
+    
+                        return theChar.character_subtype_key() == options.agentKey
+                    },
+                    (context) => {
+                        const theChar = context.character ? context.character() : null
+                        if(theChar == null) return
+                        if(this.championCreatedCallback) this.championCreatedCallback(this, "CreateFromKey")
+                    }, 
+                    false
+                )
+            }
+            if(options.cqi) {
+                super({})
+                const theChar = cm.get_character_by_cqi(options.cqi)
+                if(theChar) this.characterObj = theChar; else {
+                    CharacterLogger.LogError(`this cqi ${options.cqi} is invalid cqi`)
+                    throw(`this cqi ${options.cqi} is invalid cqi`)
+                }
+
+            } else {
+                if(options.agentType == null || options.agentType == "") {
+                    CharacterLogger.Log(`cannot create new champion because you didn't pass options.agentType. options.agentKey ${options.agentKey}`)
+                    throw(`cannot create new champion because you didn't pass options.agentType. options.agentKey ${options.agentKey}`)
+                }
+                super({
+                    characterObject: options.characterObject, 
+                    factionKey: options.factionKey,
+                    regionKey: options.regionKey,
+                    agentSubtypeKey: options.agentKey,
+                    agentType: options.agentType,
+                    spawnAsAgent: true 
+                })
+            }
+            this.championCreatedCallback = options.championCreatedCallback
+            if(this.characterObj) {
+                if(this.championCreatedCallback) this.championCreatedCallback(this, "WrappingExistingObject")
+            }
+            
         }
         
     }
