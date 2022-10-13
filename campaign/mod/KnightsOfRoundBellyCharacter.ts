@@ -131,6 +131,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 CharacterLogger.LogError(`this.characterObj is null, maybe it was not created? check console logs`)
                 throw(`this.characterObj is null, maybe it was not created? check console logs`)
             }
+            if(!this.IsValid()) {
+                CharacterLogger.LogError(`this.characterObj is INullScript, maybe it was killed? check console logs`)
+                throw(`this.characterObj is INullScript, maybe it was killed? check console logs`)
+            }
             return this.characterObj           
         }
 
@@ -173,6 +177,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         
         public get CqiNo() : number {
             return this.GetInternalInterface().command_queue_index()
+        }
+
+        public IsValid(): boolean {
+            return !this.GetFactionInterface().is_null_interface()
         }
         
 

@@ -118,13 +118,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     champion.RenameLocalised(HECTOR_FORENAME, HECTOR_HOUSE_OF)
                 }
             })
-
-            new Champion({
-                agentKey: "sdadasdadasdasda",
-                factionKey: factionKey,
-                regionKey: "wh3_main_combi_region_couronne",
-                agentType: "champion"
-            })
             this.l.LogWarn(`SpawnHectorTest ok`)
         }
 
