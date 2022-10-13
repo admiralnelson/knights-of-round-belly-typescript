@@ -77,26 +77,23 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             used: 0, free: 0
         }
 
-        private designatedFaction: IFactionScript | null = null
-
-        private LouisLeGrosHimself: Lord | null = null
+        private designatedFaction: Faction | null = null
 
         SpawnDukeLouisTest(): void {
             if(this.designatedFaction == null) {
                 this.l.LogError(`SpawnDukeLouisTest - this.designatedFaction is null`)
                 return
             }
-            this.LouisLeGrosHimself = new Lord({ 
-                factionKey: this.designatedFaction.name(),
+            new Lord({ 
+                factionKey: this.designatedFaction.FactionKey,
                 agentKey: DUKE_LOUIS_AGENT_KEY,
                 regionKey: "wh3_main_combi_region_couronne",
                 lordCreatedCallback: (lord, reason) => {
                     print(reason)
-                    cm.trigger_mission(lord.FactionKey, LOUIS_MISSION_KEY, true)
+                    this.designatedFaction?.TriggerMission(LOUIS_MISSION_KEY, true)
                     lord.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
                     lord.RenameLocalised(DUKE_LOUIS_FORENAME, DUKE_LOUIS_TITLE)
-                    this.LouisLeGrosHimself = lord
-                    setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 2000)
+                    setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
                 }
             })
 
@@ -108,7 +105,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.l.LogError(`SpawnHectorTest - this.designatedFaction is null`)
                 return
             }
-            const factionKey = this.designatedFaction.name()
+            const factionKey = this.designatedFaction.FactionKey
             new Champion({
                 agentKey: HECTOR_AGENT_KEY,
                 factionKey: factionKey,
@@ -127,37 +124,21 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return
             }
             const faction = this.designatedFaction
-            const armies = faction.military_force_list()
-            for (let i = 0; i < armies.num_items() ; i++) {
-                const theArmy = armies.item_at(i)
-                if(!theArmy.is_armed_citizenry() && theArmy.has_general()) {
-                    const theGeneral = theArmy.general_character()
-                    //this.l.Log(`iterating ${theGeneral.character_subtype_key()}`)
-                    if(theGeneral.character_subtype_key() == DUKE_LOUIS_AGENT_KEY) {
-                        this.l.Log(`killing character_cqi:${theGeneral.command_queue_index()}`)
-                        cm.kill_character_and_commanded_unit(`character_cqi:${theGeneral.command_queue_index()}`, true)
-                    }
-                }
+            const lords = faction.Lords
+
+            for (const lord of lords) {
+                lord.Destroy()
             }         
         }
 
-        FindAllOgres(): ICharacterScript[] {
+        FindAllOgres(): Lord[] {
             if(this.designatedFaction == null) return []
-
+            
             const faction = this.designatedFaction
-            const res = []
-            const armies = faction.military_force_list()
-            for (let i = 0; i < armies.num_items() ; i++) {
-                const theArmy = armies.item_at(i)
-                if(!theArmy.is_armed_citizenry() && theArmy.has_general()) {
-                    const characterList = theArmy.character_list()
-                    for (let j = 0; j < characterList.num_items(); j++) {
-                        const theCharacter = characterList.item_at(j)
-                        this.l.Log(`iterating ${theCharacter.character_subtype_key()}`)
-                        if(this.OgreChampions.indexOf(theCharacter.character_subtype_key()) >= 0) res.push(theCharacter)
-                    }
-                }
-            }   
+            const lords = faction.Lords
+            const res = lords.filter((lord) => {
+                return this.OgreChampions.indexOf(lord.SubtypeKey) >= 0
+            }) 
             return res
         }
 
@@ -166,15 +147,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             let totalPeasantsUsedByOgres = 0
             for (const iterator of ogres) {
                 const theOgre = iterator
-                this.l.Log(`GetPeasantSlotsUsedByOgres - iterating ${theOgre.character_subtype_key()}`)
+                this.l.Log(`GetPeasantSlotsUsedByOgres - iterating ${theOgre.SubtypeKey}`)
                 for (const skill of this.PeasantSlotPenaltySkills) {
-                    this.l.Log(`    skill: ${skill.skill}? ${theOgre.has_skill(skill.skill) ? skill.penalty : "nope"}`)
-                    totalPeasantsUsedByOgres += theOgre.has_skill(skill.skill) ? skill.penalty : 0
+                    this.l.Log(`    skill: ${skill.skill}? ${theOgre.HasSkill(skill.skill) ? skill.penalty : "nope"}`)
+                    totalPeasantsUsedByOgres += theOgre.HasSkill(skill.skill) ? skill.penalty : 0
                 }                
-                const traitLevel = theOgre.trait_level(PEASANT_REDUCTION_TRAIT_KEY)
+                const traitLevel = theOgre.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY)
                 let traitLevel2PeasantUsageReduction = this.MapTraitLevelToSlotPenaltyReduction.get(traitLevel) ?? 0
-                if(theOgre.has_trait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) traitLevel2PeasantUsageReduction++
-                this.l.Log(`GetPeasantSlotsUsedByOgres - trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2PeasantUsageReduction=${traitLevel2PeasantUsageReduction} PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY=${theOgre.has_trait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)}`)
+                if(theOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) traitLevel2PeasantUsageReduction++
+                this.l.Log(`GetPeasantSlotsUsedByOgres - trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2PeasantUsageReduction=${traitLevel2PeasantUsageReduction} PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY=${theOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)}`)
 
                 totalPeasantsUsedByOgres += traitLevel2PeasantUsageReduction
             }
@@ -186,11 +167,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.l.LogError(`ClearAllPenalties - this.designatedFaction == null, perhaps no bretonnia faction left?`)
                 return
             }
-            const effectBundles = this.designatedFaction.effect_bundles()
-            const factionKey = this.designatedFaction.name()
-            for (let i = 0; i < effectBundles.num_items(); i++) {
-                const effectBundle = effectBundles.item_at(i)
-                if(effectBundle.key().startsWith(PEASANTS_EFFECT_PREFIX)) cm.remove_effect_bundle(effectBundle.key(), factionKey)
+            const effectBundles = this.designatedFaction.EffectBundles
+            for (const key of effectBundles) {
+                if(key.startsWith(PEASANTS_EFFECT_PREFIX)) this.designatedFaction.RemoveEffectBundle(key)
             }
         }
 
@@ -199,10 +178,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.l.LogError(`GetAndUpdateCurrentPeasantSlotsUsage - no designated bretonnian faction, perhaps dead?`)
                 return [0, 0]
             }
-            if(!this.designatedFaction.is_human()) return [0, 0]
+            if(!this.designatedFaction.IsHuman()) return [0, 0]
 
-            const factionKey = this.designatedFaction.name()
-            Calculate_Economy_Penalty(this.designatedFaction)
+            const factionKey = this.designatedFaction.FactionKey
+            Calculate_Economy_Penalty(this.designatedFaction.GetFactionInterface())
             return [common.get_context_value(`ScriptObjectContext("peasant_count_${factionKey}").NumericValue`) as number, 
                     common.get_context_value(`ScriptObjectContext("peasant_cap_${factionKey}").NumericValue`) as number]
         }
@@ -212,9 +191,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.l.LogError(`CalculatePeasantSlotsUsage - no designated bretonnian faction, perhaps dead?`)
                 return
             }
-            if(!this.designatedFaction.is_human()) return
+            if(!this.designatedFaction.IsHuman()) return
 
-            const factionKey = this.designatedFaction.name()
+            const factionKey = this.designatedFaction.FactionKey
             const [currentPeasantUsageCount, freePeasantCount] = this.GetAndUpdateCurrentPeasantSlotsUsage()
             this.cachedPeasantQuota = {used: currentPeasantUsageCount, free: freePeasantCount }
             const peasantsAllocatedByOgre = this.GetPeasantSlotsUsedByOgres()
@@ -236,10 +215,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             if(peasantPercent > 100) {
                 peasantPercent -= 100
                 this.l.Log(`Peasant Percent Final: ${peasantPercent}%`)
-                cm.apply_effect_bundle(`${PEASANTS_EFFECT_PREFIX}${peasantPercent}`, factionKey, 0)
+                this.designatedFaction.ApplyEffectBundle(`${PEASANTS_EFFECT_PREFIX}${peasantPercent}`, 0)
                 
                 if (!localStorage.getItem("ScriptEventNegativePeasantEconomy") &&
-                    this.designatedFaction.is_human()) {
+                    this.designatedFaction.IsHuman()) {
                     core.trigger_event("ScriptEventNegativePeasantEconomy")
                     localStorage.setItem("ScriptEventNegativePeasantEconomy", true)
                 }
@@ -248,8 +227,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 
                 if ((peasantRatioPositive || peasantRatioPositive == null) &&
                      !localStorage.getItem(`peasant_warning_event_shown_${factionKey}`)) {
-                    cm.show_message_event(
-                        factionKey,
+                    this.designatedFaction.ShowMessageEvent(
                         "event_feed_strings_text_wh_dlc07_event_feed_string_scripted_event_peasant_negative_title",
                         "event_feed_strings_text_wh_dlc07_event_feed_string_scripted_event_peasant_negative_primary_detail",
                         "event_feed_strings_text_wh_dlc07_event_feed_string_scripted_event_peasant_negative_secondary_detail",
@@ -257,18 +235,18 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                         703
                     )
                     localStorage.setItem(`peasant_warning_event_shown_${factionKey}`, true)
-                    cm.add_turn_countdown_event(factionKey, 25, "ScriptEventPeasantWarningEventCooldownExpired", factionKey)
+                    this.designatedFaction.AddTurnCountdownEvent(25, "ScriptEventPeasantWarningEventCooldownExpired", factionKey)
                 }                    
                 
                 localStorage.setItem(`peasants_ratio_positive_${factionKey}`, false)
             } else {
                 this.l.Log("Peasant Percent Final: 0")
                 this.ClearAllPenalties()
-                cm.apply_effect_bundle(`${PEASANTS_EFFECT_PREFIX}0`, factionKey, 0)
+                this.designatedFaction.ApplyEffectBundle(`${PEASANTS_EFFECT_PREFIX}0`, 0)
             
                 if (localStorage.getItem("ScriptEventNegativePeasantEconomy") && 
                     !localStorage.getItem("ScriptEventPositivePeasantEconomy") &&
-                    this.designatedFaction.is_human()) {
+                    this.designatedFaction.IsHuman()) {
                     core.trigger_event("ScriptEventPositivePeasantEconomy")
                     localStorage.setItem("ScriptEventPositivePeasantEconomy", true)
                 }                
@@ -277,14 +255,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             
         }
 
-        GiveOgreLessPenaltiesForCompletingGrailQuests(whichOgre: ICharacterScript, whatQuest: "KnightsVow" | "QuestingVow" | "GrailVow"): void {
-            if(this.OgreChampions.indexOf(whichOgre.character_subtype_key()) < 0) {
-                this.l.LogError(`whichOgre param (${whichOgre.character_subtype_key()}) is not defined in this.OgreChampions ${JSON.stringify(this.OgreChampions)} array`)
+        GiveOgreLessPenaltiesForCompletingGrailQuests(whichOgre: Character, whatQuest: "KnightsVow" | "QuestingVow" | "GrailVow"): void {
+            if(this.OgreChampions.indexOf(whichOgre.SubtypeKey) < 0) {
+                this.l.LogError(`whichOgre param (${whichOgre.SubtypeKey}) is not defined in this.OgreChampions ${JSON.stringify(this.OgreChampions)} array`)
                 return
             }
-            this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.character_subtype_key()} whatQuest ${whatQuest}`)
-            if(whichOgre.has_trait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) cm.force_remove_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
-            cm.force_add_trait(cm.char_lookup_str(whichOgre), PEASANT_REDUCTION_TRAIT_KEY, true, 1)
+            this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.SubtypeKey} whatQuest ${whatQuest}`)
+            if(whichOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) whichOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+            whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)
             this.CalculatePeasantSlotsUsageAndApplyPenalties()
         }
 
@@ -316,9 +294,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(autoManagementButton) autoManagementButton.PropagateVisibility(false)
                 
                 const cqi = context?.Call(`CQI()`) as number
-                const theCharacter = cm.get_character_by_cqi(cqi)
-                if(theCharacter != false) {
-                    if(theCharacter.trait_level(PEASANT_REDUCTION_TRAIT_KEY) >= 2) return
+                const theCharacter = FindCharacter(cqi)
+                if(theCharacter) {
+                    if(theCharacter.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) >= 2) return
                 }
             }
 
@@ -346,14 +324,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const ogres = this.FindAllOgres()
             let totalChivalryPoints = 0
             for (const iterator of ogres) {
-                this.l.Log(`GetOgresChivalryPointsFromModTraits - iterating ${iterator.character_subtype_key()}`)
+                this.l.Log(`GetOgresChivalryPointsFromModTraits - iterating ${iterator.SubtypeKey}`)
                 for (const skillmod of this.ChivalryPointModifierSkills) {
-                    if(iterator.has_skill(skillmod.skill)) {
+                    if(iterator.HasSkill(skillmod.skill)) {
                         totalChivalryPoints += skillmod.chivalry
-                        this.l.Log(`                              iterator.has_skill ${skillmod.skill} ${iterator.has_skill(skillmod.skill)} => ${skillmod.chivalry}`)
+                        this.l.Log(`                              iterator.has_skill ${skillmod.skill} ${iterator.HasSkill(skillmod.skill)} => ${skillmod.chivalry}`)
                     }
                 }
-                const traitLevel = iterator.trait_level(PEASANT_REDUCTION_TRAIT_KEY)
+                const traitLevel = iterator.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY)
                 const traitLevel2ChivalryPoints = this.MapTraitLevelToSlotPenaltyReduction.get(traitLevel) ?? 0
                 this.l.Log(`                                      trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2ChivalryPoints=${traitLevel2ChivalryPoints}`)
                 totalChivalryPoints += traitLevel2ChivalryPoints
@@ -386,19 +364,23 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.designatedFaction = null
             this.BretonnianFactionsKeys.sort((a, b) => a.priority - b.priority)
             for (const iterator of this.BretonnianFactionsKeys) {
-                const theFaction = cm.model().world().faction_by_key(iterator.faction)
-                if(!theFaction.is_dead() && theFaction.is_human()) {
-                    this.designatedFaction = theFaction
-                    break
+                const theFaction = GetFactionByKey(iterator.faction)
+                if(theFaction) {
+                    if(!theFaction.IsDead() && theFaction.IsHuman()) {
+                        this.designatedFaction = theFaction
+                        break
+                    }
                 }
             }
             if(this.designatedFaction == null) {
                 this.l.LogWarn(`SetupDesignatedFaction - no human bretonnian faction was found. Running search again for bot player`) 
                 for (const iterator of this.BretonnianFactionsKeys) {
-                    const theFaction = cm.model().world().faction_by_key(iterator.faction)
-                    if(!theFaction.is_dead()) {
-                        this.designatedFaction = theFaction
-                        break
+                    const theFaction = GetFactionByKey(iterator.faction)
+                    if(theFaction) {
+                        if(!theFaction.IsDead()) {
+                            this.designatedFaction = theFaction
+                            break
+                        }
                     }
                 }
             }
@@ -407,8 +389,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.l.LogWarn(`SetupDesignatedFaction - no bretonnian faction was left in this world...`) 
                 return
             }
-            this.l.Log(`SetupDesignatedFaction ok - current faction is ${this.designatedFaction.name()}`)
-            const peasantCounts = common.get_context_value(`ScriptObjectContext("peasant_count_${this.designatedFaction.name()}").NumericValue`) as number
+            this.l.Log(`SetupDesignatedFaction ok - current faction is ${this.designatedFaction.FactionKey}`)
+            const peasantCounts = common.get_context_value(`ScriptObjectContext("peasant_count_${this.designatedFaction.FactionKey}").NumericValue`) as number
             this.l.LogWarn(`current peasant count is ${peasantCounts}`)
         }
 
@@ -476,7 +458,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     const theOgre = context.character? context.character() : null
                     if(theOgre == null) return
 
-                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(theOgre, "KnightsVow")
+                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(new Character({characterObject: theOgre}), "KnightsVow")
                 }, 
                 true
             )
@@ -491,7 +473,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     const theOgre = context.character? context.character() : null
                     if(theOgre == null) return
 
-                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(theOgre, "QuestingVow")
+                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(new Character({characterObject: theOgre}), "QuestingVow")
                 }, 
                 true
             )
@@ -506,7 +488,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     const theOgre = context.character? context.character() : null
                     if(theOgre == null) return
 
-                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(theOgre, "GrailVow")
+                    this.GiveOgreLessPenaltiesForCompletingGrailQuests(new Character({characterObject: theOgre}), "GrailVow")
                 }, 
                 true
             )
@@ -521,7 +503,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     const faction = context.faction ? context.faction() : null
                     if(faction == null) return false
 
-                    return this.designatedFaction == faction
+                    return this.designatedFaction?.FactionKey == faction.name()
                 },
                 (context) => this.CalculatePeasantSlotsUsageAndApplyPenalties(),
                 true
@@ -538,7 +520,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     const faction = context.faction ? context.faction() : null
                     if(faction == null) return false
 
-                    return this.designatedFaction == faction
+                    return this.designatedFaction?.FactionKey == faction.name()
                 },
                 (context) => this.CalculatePeasantSlotsUsageAndApplyPenalties(),
                 true
@@ -581,7 +563,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         constructor() {
-            cm.add_first_tick_callback( () => this.Init() )
+            OnCampaignStart( () => this.Init() )
         }
     }
     
