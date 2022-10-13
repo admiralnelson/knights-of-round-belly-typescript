@@ -670,6 +670,26 @@ interface ICampaignManager {
      * @param artSetKey Model key, from the campaign_character_art_sets database table.
      */
     add_character_model_override(character: ICharacterScript, artSetKey: string): void
+    /**
+     * Create and add a specifiec unit to a military force commanded by a specified character. The unit will only be created if there is room for it in the force.
+     * @param stringLookup Character lookup string. For more information, see Character Lookups.
+     * @param mainUnitKey Key of unit to create, from the main_units table.
+     */
+    grant_unit_to_character(stringLookup: string, mainUnitKey: string): void
+    /**
+     * Teleports a character to a logical position on the campaign map. This function is a wrapper for the cm:teleport_to function on the underlying episodic scripting interface. This wrapper adds debug output and argument validation.
+This function can also reposition the camera, so it's best used on game creation to move characters around at the start of the campaign, rather than on the first tick or later.
+     * @param stringLookup Character string of character to teleport. This uses the standard character string lookup system.
+     * @param x Logical x co-ordinate to teleport to.
+     * @param y Logical y co-ordinate to teleport to.
+     */
+    teleport_to(stringLookup: string, x: number, y: number): void
+    /**
+     * Kills the specified character, with the ability to also destroy their whole force if they are commanding one. The character may be specified by a lookup string or by character cqi.
+     * @param stringLookupOrCqiNo Character string of character to kill. This uses the standard character string lookup system. Alternatively, a number may be supplied, which specifies a character cqi. 
+     * @param destroyTheForceToo optional, default value=false Will also destroy the characters whole force if true.
+     */
+    kill_character(stringLookupOrCqiNo: string | number, destroyTheForceToo?: boolean): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
