@@ -1,5 +1,6 @@
 namespace AdmiralNelsonKnightsOfTheRoundBelly {
     export type TimerCallback = () => void
+    export type VoidCallback = () => void
     export class localStorage {
         public static setItem(key: string, value: any) : void {
             cm.set_saved_value(key, value)
@@ -14,6 +15,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             cm.set_saved_value(key, null)
         }
     }
+
+    export function OnCampaignStart(callback: VoidCallback) {
+        cm.add_first_tick_callback( () => callback() )
+    }
+
     export function clamp(v: number, min: number, max:number) : number {
         if(v >= max) return max
         if(v <= min) return min
