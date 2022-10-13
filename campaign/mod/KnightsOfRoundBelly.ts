@@ -11,6 +11,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     const HECTOR_AGENT_KEY = "admnelson_bret_ogre_hector_de_maris_agent_key"
 
     const DUKE_LOUIS_FORENAME = "names_name_11382017"; const DUKE_LOUIS_TITLE = "names_name_11382018"
+    const HECTOR_FORENAME = "names_name_11382022"; const HECTOR_HOUSE_OF = "names_name_11382023"
     
     const CIVILISED_SKILL_KEY     = "admiralnelson_ogre_civilised_characther_skills_1_skill_key"
     const OGRE_SKILL_KEY          = "admiralnelson_ogre_being_is_generally_unchivalrous_and_savage_skills_key_background_skill_scripted"
@@ -85,20 +86,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.l.LogError(`SpawnDukeLouisTest - this.designatedFaction is null`)
                 return
             }
-            // const factionKey = this.designatedFaction.name()
-            // const [x, y] = cm.find_valid_spawn_location_for_character_from_settlement(factionKey, "wh3_main_combi_region_couronne", false, true)
-            // cm.create_force_with_general(factionKey, undefined, "wh3_main_combi_region_couronne", x, y, "general", DUKE_LOUIS_AGENT_KEY, DUKE_LOUIS_FORENAME, DUKE_LOUIS_TITLE, "", "", false, 
-            // (cqi) => {
-            //     this.l.LogWarn(`our lord ${DUKE_LOUIS_AGENT_KEY} has spawn with cqi no ${cqi}`)
-            //     let theLordHimself = cm.get_character_by_cqi(cqi)
-            //     if(theLordHimself != false) {
-            //         theLordHimself = theLordHimself as ICharacterScript
-            //         this.LouisLeGrosHimself = theLordHimself
-            //         cm.trigger_mission(factionKey, LOUIS_MISSION_KEY, true)
-            //         cm.force_add_trait(cm.char_lookup_str(theLordHimself), PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY, true, 1)
-            //         setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 2000)
-            //     }
-            // })
             this.LouisLeGrosHimself = new Lord({ 
                 factionKey: this.designatedFaction.name(),
                 agentKey: DUKE_LOUIS_AGENT_KEY,
@@ -122,10 +109,23 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return
             }
             const factionKey = this.designatedFaction.name()
-            const [x, y] = cm.find_valid_spawn_location_for_character_from_settlement(factionKey, "wh3_main_combi_region_couronne", false, true)
-            cm.spawn_agent_at_position(this.designatedFaction, x, y, "champion", HECTOR_AGENT_KEY)
+            new Champion({
+                agentKey: HECTOR_AGENT_KEY,
+                factionKey: factionKey,
+                regionKey: "wh3_main_combi_region_couronne",
+                agentType: "champion",
+                championCreatedCallback: (champion, reason) => {
+                    champion.RenameLocalised(HECTOR_FORENAME, HECTOR_HOUSE_OF)
+                }
+            })
+
+            new Champion({
+                agentKey: "sdadasdadasdasda",
+                factionKey: factionKey,
+                regionKey: "wh3_main_combi_region_couronne",
+                agentType: "champion"
+            })
             this.l.LogWarn(`SpawnHectorTest ok`)
-            const lord = new Lord()
         }
 
         KillAllOgres(): void {
