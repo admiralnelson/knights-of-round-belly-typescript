@@ -16,15 +16,30 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
     }
 
+    /**
+     * Fires when a campaign starts (or every session change from battle -> campaign)
+     * @param callback 
+     */
     export function OnCampaignStart(callback: VoidCallback) {
         cm.add_first_tick_callback( () => callback() )
     }
-
+    /**
+     * Clamp such that min >= v <= max 
+     * @param v 
+     * @param min 
+     * @param max 
+     * @returns 
+     */
     export function clamp(v: number, min: number, max:number) : number {
         if(v >= max) return max
         if(v <= min) return min
         return v
     }
+    /**
+     * Generate alphanumeric random string
+     * @param len how long the string is
+     * @returns random alphanumeric string
+     */
     export function RandomString(len: number = 10): string {
         let outString: string = '';
         const inOptions: string = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -142,12 +157,31 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
     }
 
-    export function setTimeout(callback: TimerCallback, inMilliSecond: number): number {
+    /**
+     * The global setTimeout() method sets a timer which executes a function or specified piece of code once the timer expires.
+     * @param callback A function to be executed after the timer expires.
+     * @param inMilliSecond The time, in milliseconds that the timer should wait before the specified function or code is executed. If this parameter is omitted, a value of 0 is used, meaning execute "immediately", or more accurately, the next event cycle.
+     * @returns The returned timeoutID is a positive integer value which identifies the timer created by the call to setTimeout(). This value can be passed to clearTimeout() to cancel the timeout.
+     */
+    export function setTimeout(callback: TimerCallback, inMilliSecond: number = 0): number {
         return TimerManager.Instance.RegisterSingleShot(callback, inMilliSecond)
     }
-    export function setInterval(callback: TimerCallback, inMilliSecond: number): number {
+    /**
+     * The setInterval() method, offered on the `real_timer` interface, repeatedly calls a function or executes a code snippet, with a fixed time delay between each call.
+     * This method returns an interval ID which uniquely identifies the interval, so you can remove it later by calling clearInterval().
+     * @param callback A function to be executed every delay milliseconds. The first execution happens after delay milliseconds.
+     * @param inMilliSecond The time, in milliseconds (thousandths of a second), the timer should delay in between executions of the specified function or code. Defaults to 10 if not specified, lowest value is 10 
+     * @returns The returned intervalID is a numeric, non-zero value which identifies the timer created by the call to setInterval(); this value can be passed to clearInterval() to cancel the interval.
+     */
+    export function setInterval(callback: TimerCallback, inMilliSecond: number = 10): number {
+        inMilliSecond <= 10 ? inMilliSecond = 10 : inMilliSecond
         return TimerManager.Instance.RegisterRepeating(callback, inMilliSecond)
     }
+    /**
+     * 
+     * @param id The global clearInterval() method cancels a timed, repeating action which was previously established by a call to setInterval(). If the parameter provided does not identify a previously established action, this method does nothing.
+     * @returns true if clear was successful
+     */
     export function clearInterval(id: number): boolean {
         return TimerManager.Instance.Kill(id)
     }
