@@ -145,8 +145,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         GetPeasantSlotsUsedByOgres(): number {
             const ogres = this.FindAllOgres()
             let totalPeasantsUsedByOgres = 0
-            for (const iterator of ogres) {
-                const theOgre = iterator
+            for (const theOgre of ogres) {
                 this.l.Log(`GetPeasantSlotsUsedByOgres - iterating ${theOgre.SubtypeKey}`)
                 for (const skill of this.PeasantSlotPenaltySkills) {
                     this.l.Log(`    skill: ${skill.skill}? ${theOgre.HasSkill(skill.skill) ? skill.penalty : "nope"}`)
