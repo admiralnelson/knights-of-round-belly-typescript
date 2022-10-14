@@ -1,6 +1,13 @@
 namespace AdmiralNelsonKnightsOfTheRoundBelly {
+
+    const FactionLogger = new Logger("AdmiralNelsonKnightsOfTheRoundBelly FactionLogger")
+
     const CachedFactions: Faction[] = []
 
+    /**
+     * Gets all the faction in the campaign. If this fires for the first time, it will take time to caches first.
+     * @returns Array of Wrapped IFactionScript in Faction object
+     */
     export function GetFactions(): Faction[] {
         if(CachedFactions.length == 0) {
             const theWorld = cm.model().world()
@@ -13,58 +20,116 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         return CachedFactions
     }
 
+    /**
+     * Get a wrapped IFactionScript inside Faction class given a faction key.
+     * @param factionKey faction key from faction table
+     * @returns Faction object or null if such key was not found
+     */
     export function GetFactionByKey(factionKey: string): Faction | undefined {
         const faction = GetFactions()
         return faction.find( faction => faction.FactionKey == factionKey)
     }
 
-    export function CastToFaction(castFrom: IFactionScript): Faction | undefined {
-        return GetFactionByKey(castFrom.name())
-    }
-
     export class Faction {
         private factionInterface: IFactionScript
 
+        /**
+         * Wraps IFactionScript object into Faction object so you can manipulate and query this faction with OOP style (no need to touch cm API again)
+         * @param faction IFactionScript
+         * @throws execption if the user puts invalid IFactionScript object (i.e if it's INullScript)
+         */
         constructor(faction: IFactionScript) {
             this.factionInterface = faction
+            if(this.factionInterface.is_null_interface()) {
+                FactionLogger.LogError(`the faction interface is null interface!`)
+                throw(`the faction interface is null interface!`)
+            }
         }
 
+        /**
+         * Removes effect budle from this faction
+         * @param effectBundleKey effect bundle key from effect bundle table
+         */
         public RemoveEffectBundle(effectBundleKey: string): void {
             cm.remove_effect_bundle(effectBundleKey, this.FactionKey)
         }
 
+        /**
+         * Check if this faction is human
+         * @returns true if human
+         */
         public IsHuman(): boolean {
             return this.factionInterface.is_human()
         }
 
+        /**
+         *  Check if this faction is dead
+         * @returns true if dead
+         */
         public IsDead(): boolean {
             return this.factionInterface.is_dead()
         }
 
+        /**
+         * Gets internal IFactionScript referenced by this wrapper
+         * @returns IFactionScript
+         */
         public GetFactionInterface(): IFactionScript {
             return this.factionInterface
         }
 
+        /**
+         * Check if the internal IFactionScript is valid
+         * @returns true if still valid
+         */
         public IsValid(): boolean {
             return !this.factionInterface.is_null_interface()
         }
 
+        /**
+         * Constructs and displays an event for this faction. This wraps the cm.show_message_event function of the same name on the underlying episodic_scripting, although it provides input validation, output, whitelisting and a progression callback.
+         * @param titleLocKey Localisation key for the event title. This should be supplied in the full `[table]_[field]_[key]` localisation format, or can be a blank string.
+         * @param primaryLocKey Localisation key for the primary detail of the event. This should be supplied in the full `[table]_[field]_[key]` localisation format, or can be a blank string.
+         * @param secondaryLocKey Localisation key for the secondary detail of the event. This should be supplied in the full `[table]_[field]_[key]` localisation format, or can be a blank string.
+         * @param isPersistent Sets this event to be persistent instead of transient.
+         * @param index Index indicating the type of event.
+         * @param endCallback optional, default value=false Specifies a callback to call when this event is dismissed. Note that if another event message shows first for some reason, this callback will be called early.
+         * @param callbackDelay optional, default value=0 Delay in seconds before calling the end callback, if supplied.
+         * @param dontWhitelist optional, default value=false By default this function will whitelist the scripted event message type with campaign_manager.whitelist_event_feed_event_type. Set this flag to true to prevent this.
+         */
         public ShowMessageEvent(titleLocKey: string, primaryLocKey: string, secondaryLocKey: string, isPersistent: boolean,  index: number, endCallback?: () => void, callbackDelay?: number, dontWhitelist?: boolean): void {
             cm.show_message_event(this.FactionKey, titleLocKey, primaryLocKey, secondaryLocKey, isPersistent, index, endCallback, callbackDelay, dontWhitelist)
         }
 
-        public ApplyEffectBundle(effectBundleKey: string, howManyTurnZeroForPermanent: number = 0): void {
-            cm.apply_effect_bundle(effectBundleKey, this.FactionKey, howManyTurnZeroForPermanent)
+        /**
+         * Applies an effect bundle to this faction for a number of turns (can be infinite)
+         * @param effectBundleKey Effect bundle key from the effect bundles table.
+         * @param turns Number of turns to apply the effect bundle for. Supply 0 here to apply the effect bundle indefinitely (it can be removed later with `.RemoveEffectBundle` if required).
+         */
+        public ApplyEffectBundle(effectBundleKey: string, turns: number = 0): void {
+            cm.apply_effect_bundle(effectBundleKey, this.FactionKey, turns)
         }
 
+       /**
+        * Registers a turn countdown event for this faction. The supplied script event will be triggered after the specified number of turns has passed, when the FactionTurnStart event is received for the specified faction.
+        * @param turns Number of turns from now to trigger the event.
+        * @param event Event to trigger. By convention, script event names begin with "ScriptEvent"
+        * @param contextString optional, default value="" Optional context string to trigger with the event.
+        */
         public AddTurnCountdownEvent(turns: number, event: string, contextString: string): void {
             cm.add_turn_countdown_event(this.FactionKey, turns, event, contextString)
         }
 
-        public TriggerMission(missionKey: string, fireImmediately: boolean = true) {
+        /**
+         * Trigger a mission from this faction
+         * @param missionKey Mission key from Mission tables
+         * @param fireImmediately start the mission immediately after this method is fired
+         */
+        public TriggerMission(missionKey: string, fireImmediately: boolean = true): void {
             cm.trigger_mission(this.FactionKey, missionKey, fireImmediately)
         }
 
+        /**(Getter) Gets all lords in this faction, wrapped in Lord class */
         public get Lords(): Lord[] {
             const result = []
             const armies = this.factionInterface.military_force_list()
@@ -83,6 +148,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return []
         }
 
+        /**(Getter) array of effect bundle keys on this faction */
         public get EffectBundles(): string[] {
             const res = []
             const effectBundles = this.factionInterface.effect_bundles()
@@ -93,6 +159,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return res
         }
         
+        /**(Getter) get faction key */
         public get FactionKey() : string {
             return this.factionInterface.name()
         }
@@ -101,6 +168,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return this.FactionKey
         }
 
+        /**
+         * Rather than doing this factionA == factionB (although both instances have the same reference, the objects wrapper are still different), use this method to check if both object is equal
+         * @param otherFaction 
+         * @returns 
+        */
         public IsEqual(otherFaction: Faction) {
             return this.FactionKey == otherFaction.FactionKey
         }
