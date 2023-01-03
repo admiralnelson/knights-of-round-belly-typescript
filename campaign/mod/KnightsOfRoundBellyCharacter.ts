@@ -41,6 +41,19 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     /**
+     * Converts ICharacterListScript into Array of Character
+     * @param characterListObject 
+     * @returns 
+     */
+    export function WrapICharacterObjectListToCharacterArray(characterListObject: ICharacterListScript): Character[] {
+        let ret = []
+        for (let i = 0; i < characterListObject.num_items(); i++) {
+            ret.push(WrapICharacterObjectToCharacter(characterListObject.item_at(i)))            
+        }
+        return ret
+    }
+
+    /**
      * ICharacterScript wrapper. It allows you to query and manipulate your lords and heroes in OOP style rather than relying cm APIs
      */
     export class Character {
@@ -253,6 +266,17 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         /** (Getter) Command queue index number */
         public get CqiNo() : number {
             return this.GetInternalInterface().command_queue_index()
+        }
+
+        /** (Getter) is the character in valid region? */
+        public get IsInRegion(): boolean {
+            return this.GetInternalInterface().has_region()
+        }
+
+        /** (Getter) get character region key */
+        public get CurrentRegionKey(): string {
+            if(!this.IsInRegion) return ""
+            return this.GetInternalInterface().region().name()
         }
 
         /**

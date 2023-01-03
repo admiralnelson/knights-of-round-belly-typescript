@@ -122,7 +122,11 @@ interface IFactionListScript extends IListScript {
 }
 
 interface IRegionListScript extends IListScript {
+    item_at(index: number): IRegionScript
+}
 
+interface IFactionProvinceManagerList extends IListScript {
+    item_at(index: number): IFactionProvinceManager
 }
 
 interface IUniqueAgentDetailsListScript extends IListScript {
@@ -138,6 +142,10 @@ interface IEffectListScript extends IListScript {
 }
 
 interface IProvinceListScript extends IListScript {
+
+}
+
+interface ISlotListScript extends IListScript {
 
 }
 
@@ -169,7 +177,7 @@ interface IFactionRitualsScript extends INullScript {
 
 }
 
-interface IFactionProvinceManagerList extends INullScript {
+interface IFactionProvinceManager extends INullScript {
 
 }
 
@@ -219,7 +227,106 @@ interface IGarrisonResidenceScript extends INullScript {
 }
 
 interface IRegionScript extends INullScript {
-
+    
+    cqi(): number
+    model(): IModelScript
+    /** Access to the faction that owns the region */
+    owning_faction(): IFactionScript
+    /** A list of slots contained in the region */
+    slot_list(): ISlotListScript
+    /**  */
+    settlement(): ISettlementScript
+    /** The regions settlement as a garrison_residence */
+    garrison_residence(): IGarrisonResidenceScript
+    /** region key */
+    name(): string
+    /** Key of the province containing the region */
+    province_name(): string
+    /** public order level, the lower it is the worse */
+    public_order(): number
+    /** The number of buildings in a region */
+    num_buildings(): number
+    /** Does a slot with a given key exist in the region?
+     *  @param slotKeys input a slot key, e.g. slot_type_exists("rice:jap_awa:farm")
+     */
+    slot_type_exists(slotKeys: string): boolean
+    /**
+     * Does a building with a given key exist in the region?
+     * @param buildingKey input a building key, e.g. building_exists("key")
+     */
+    building_exists(buildingKey: string): boolean
+    /** Returns the key of the last building constructed this region */
+    last_building_constructed_key(): string
+    /** Is a resource produced in this region?
+     * @param resourceKey input a resource key, e.g. resource_exists("key")
+     */
+    resource_exists(resourceKey: string): boolean
+    /** Is any resource, at all, produced in this region? */
+    any_resource_available(): boolean
+    /**
+     * Returns the list of regions adjacent to this one (including where the connection is not traversable)
+     */
+    adjacent_region_list(): IRegionListScript
+    /**
+     *  Returns true if the region is abandoned
+     */
+    is_abandoned(): boolean
+    /**
+     *  Returns true if you can recruite the specified agent type at the regions settlement
+     * @param agentKey the agent key
+     */
+    can_recruit_agent_at_settlement(agentKey: string): boolean
+    /**
+     * Returns the total amount of growth points accumulated in a province towards the next population point
+     */
+    faction_province_growth(): number
+    /**
+     *  Returns the amount of growth points added in a province towards the next population point this turn
+     */
+    faction_province_growth_per_turn(): number
+    /** Returns the current gross domestic produce of this region */
+    gdp(): number
+    /**  Is this region the province capital? */
+    is_province_capital(): boolean
+    /**  Does this region have enough development points to upgrade? */
+    has_development_points_to_upgrade(): boolean
+    /** Does this region's owner support Faction Slaves */
+    has_faction_province_slaves(): boolean
+    /**  Number of slaves in the faction province */
+    num_faction_province_slaves(): number
+    /**  Maximum number of slaves for the faction province */
+    max_faction_province_slaves(): number
+    /** Percentage faction province slaves of the maximum */
+    percentage_faction_province_slaves(): number
+    /** Returns true if region has an active storm */
+    has_active_storm(): boolean
+    /** Gets the REGION_DATA interface of the region */
+    region_data_interface(): IRegionDataScript
+    /**  Gets the key of the currently selected edict of the region, returns "" if there is no edict active */
+    get_selected_edict_key(): string
+    /** Gets the key of the currently active edict of the region, returns "" if there is no edict active */
+    get_active_edict_key(): string
+    /** Returns the complete list of foreign slot managers currently active in this region */
+    foreign_slot_managers(): IForeignSlotManagerListScript
+    /** Returns the foreign slot manager that belongs to the specified faction. Will be null if they do not have a foreign slot manager in this region 
+     * @param factionKey 
+    */
+    foreign_slot_manager_for_faction(factionKey: string): IForeignSlotManagerListScript
+    /** Effect bundles currently active on the region */
+    effect_bundles(): IEffectBundleListScript
+    /**  Effect bundles currently active on the faction province */
+    faction_province_effect_bundles(): IEffectBundleListScript
+    /** Test if this region has the specified effect bundle */
+    has_effect_bundle(effectBundleKey: string): boolean
+    /** Test if this regions faction province has the specified effect bundle */
+    faction_province_has_effect_bundle(effectBundleKey: string): boolean
+    /** Geographical province that contains this region */
+    province(): IProvinceScript
+    /** Faction province that owns this region */
+    faction_province(): IFactionProvinceManager
+    pooled_resource_manager(): IPooledResourceManager
+    bonus_values(): IBonusValuesScript
+    
 }
 
 interface ISeaRegionScript extends INullScript {
@@ -482,6 +589,33 @@ interface IPooledResourceManager extends INullScript {
 
 }
 
+interface IBuildingScript extends INullScript {
+    model(): IModelScript
+    faction(): IFactionScript
+    /** Does this building unlock any technologies when constructed? */
+    unlocks_technologies(): boolean
+    /**  Does this building have a lifecycle? */
+    has_lifecycle(): boolean
+    /**  The shadow building level key, for if this building has a lifecycle. A blank string is returned if the building has no lifecycle. */
+    shadow_building_level(): string
+    /** Get the list of effects this building provides */
+    effects(): IEffectListScript
+    /** Get the list of effects this building provides */
+    region(): IRegionScript
+    /** The slot containing the building */
+    slot(): ISlotScript
+    /** The key for the building (building level record) */
+    name(): string
+    /** The key for the building chain (building_chain_record key) */
+    chain(): string
+    /** The key for the building superchain (building_superchain_record key) */
+    superchain(): string
+    /** health, in integer */
+    percent_health(): number
+    /** this buildiing level */
+    building_level(): number
+}
+
 interface ICharacterDetailsScript extends INullScript {
     faction(): IFactionScript
     forename(fornameDbKey: string): boolean
@@ -700,6 +834,10 @@ interface IContext {
     character_details?(): ICharacterDetailsScript
     string?: string
     skill_point_spent_on?(): string
+    mission_result_critial_success?(): boolean
+    mission_result_success?(): boolean
+    ranks_gained?(): number
+    building?(): IBuildingScript
 }
 
 interface IRealTimer {
