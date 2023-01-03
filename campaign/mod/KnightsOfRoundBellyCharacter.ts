@@ -14,10 +14,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         regionKey?: string
     }
     type CallbackLordCreated = { 
-        (theLordHimself: Lord, reason: "CreateFromKey" | "WrappingExistingObject"): void
+        (theLordHimself: Lord, reason?: "CreateFromKey" | "WrappingExistingObject"): void
     }
     type CallbackChampionCreated = { 
-        (theChampionHimself: Champion, reason: "CreateFromKey" | "WrappingExistingObject"): void
+        (theChampionHimself: Champion, reason?: "CreateFromKey" | "WrappingExistingObject"): void
     }
 
     /**

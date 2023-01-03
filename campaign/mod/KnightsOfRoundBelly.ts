@@ -88,12 +88,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 factionKey: this.designatedFaction.FactionKey,
                 agentKey: DUKE_LOUIS_AGENT_KEY,
                 regionKey: "wh3_main_combi_region_couronne",
-                lordCreatedCallback: (lord, reason) => {
-                    print(reason)
+                lordCreatedCallback: (lord) => {
                     this.designatedFaction?.TriggerMission(LOUIS_MISSION_KEY, true)
                     lord.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
                     lord.RenameLocalised(DUKE_LOUIS_FORENAME, DUKE_LOUIS_TITLE)
                     setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
+                    lord.AddTroops(["wh_dlc07_brt_cav_royal_hippogryph_knights_0", "wh_dlc07_brt_cav_royal_hippogryph_knights_0", "wh_dlc07_brt_cav_royal_hippogryph_knights_0"])
                 }
             })
 
@@ -113,6 +113,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 agentType: "champion",
                 championCreatedCallback: (champion, reason) => {
                     champion.RenameLocalised(HECTOR_FORENAME, HECTOR_HOUSE_OF)
+                    champion.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+                    setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500);
                 }
             })
             this.l.LogWarn(`SpawnHectorTest ok`)
@@ -131,14 +133,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }         
         }
 
-        FindAllOgres(): Lord[] {
+        FindAllOgres(): Character[] {
             if(this.designatedFaction == null) return []
             
             const faction = this.designatedFaction
-            const lords = faction.Lords
-            const res = lords.filter((lord) => {
-                return this.OgreChampions.indexOf(lord.SubtypeKey) >= 0
-            }) 
+            const characters = this.designatedFaction.Characters
+            const res = characters.filter((character) => {
+                return this.OgreChampions.indexOf(character.SubtypeKey) >= 0
+            })         
             return res
         }
 
@@ -146,7 +148,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const ogres = this.FindAllOgres()
             let totalPeasantsUsedByOgres = 0
             for (const theOgre of ogres) {
-                this.l.Log(`GetPeasantSlotsUsedByOgres - iterating ${theOgre.SubtypeKey}`)
+                this.l.Log(`GetPeasantSlotsUsedByOgres - iterating ${theOgre.SubtypeKey} ${theOgre.LocalisedFullName}`)
                 for (const skill of this.PeasantSlotPenaltySkills) {
                     this.l.Log(`    skill: ${skill.skill}? ${theOgre.HasSkill(skill.skill) ? skill.penalty : "nope"}`)
                     totalPeasantsUsedByOgres += theOgre.HasSkill(skill.skill) ? skill.penalty : 0

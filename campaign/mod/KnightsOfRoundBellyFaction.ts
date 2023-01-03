@@ -129,6 +129,17 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             cm.trigger_mission(this.FactionKey, missionKey, fireImmediately)
         }
 
+        /**(Getter) gets all lords and champions, wrap them in generic Character class */
+        public get Characters(): Character[] {
+            const result = []
+            const characters = this.factionInterface.character_list()
+            for (let i = 0; i < characters.num_items(); i++) {
+                const theCharacter = characters.item_at(i)
+                result.push(new Character({characterObject: theCharacter}))
+            }
+            return result
+        }
+        
         /**(Getter) Gets all lords in this faction, wrapped in Lord class */
         public get Lords(): Lord[] {
             const result = []
