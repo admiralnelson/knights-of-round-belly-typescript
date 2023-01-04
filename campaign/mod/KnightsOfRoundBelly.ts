@@ -179,7 +179,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.l.LogError(`GetAndUpdateCurrentPeasantSlotsUsage - no designated bretonnian faction, perhaps dead?`)
                 return [0, 0]
             }
-            if(!this.designatedFaction.IsHuman()) return [0, 0]
+            if(!this.designatedFaction.IsHuman) return [0, 0]
 
             const factionKey = this.designatedFaction.FactionKey
             Calculate_Economy_Penalty(this.designatedFaction.GetFactionInterface())
@@ -192,7 +192,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.l.LogError(`CalculatePeasantSlotsUsage - no designated bretonnian faction, perhaps dead?`)
                 return
             }
-            if(!this.designatedFaction.IsHuman()) return
+            if(!this.designatedFaction.IsHuman) return
 
             const factionKey = this.designatedFaction.FactionKey
             const [currentPeasantUsageCount, freePeasantCount] = this.GetAndUpdateCurrentPeasantSlotsUsage()
@@ -219,7 +219,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.designatedFaction.ApplyEffectBundle(`${PEASANTS_EFFECT_PREFIX}${peasantPercent}`, 0)
                 
                 if (!localStorage.getItem("ScriptEventNegativePeasantEconomy") &&
-                    this.designatedFaction.IsHuman()) {
+                    this.designatedFaction.IsHuman) {
                     core.trigger_event("ScriptEventNegativePeasantEconomy")
                     localStorage.setItem("ScriptEventNegativePeasantEconomy", true)
                 }
@@ -247,7 +247,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             
                 if (localStorage.getItem("ScriptEventNegativePeasantEconomy") && 
                     !localStorage.getItem("ScriptEventPositivePeasantEconomy") &&
-                    this.designatedFaction.IsHuman()) {
+                    this.designatedFaction.IsHuman) {
                     core.trigger_event("ScriptEventPositivePeasantEconomy")
                     localStorage.setItem("ScriptEventPositivePeasantEconomy", true)
                 }                
@@ -367,7 +367,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             for (const iterator of this.BretonnianFactionsKeys) {
                 const theFaction = GetFactionByKey(iterator.faction)
                 if(theFaction) {
-                    if(!theFaction.IsDead() && theFaction.IsHuman()) {
+                    if(!theFaction.IsDead && theFaction.IsHuman) {
                         this.designatedFaction = theFaction
                         break
                     }
@@ -378,7 +378,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 for (const iterator of this.BretonnianFactionsKeys) {
                     const theFaction = GetFactionByKey(iterator.faction)
                     if(theFaction) {
-                        if(!theFaction.IsDead()) {
+                        if(!theFaction.IsDead) {
                             this.designatedFaction = theFaction
                             break
                         }
