@@ -2,22 +2,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
     const FactionLogger = new Logger("AdmiralNelsonKnightsOfTheRoundBelly FactionLogger")
 
-    const CachedFactions: Faction[] = []
-
     /**
      * Gets all the faction in the campaign. If this fires for the first time, it will take time to caches first.
      * @returns Array of Wrapped IFactionScript in Faction object
      */
     export function GetFactions(): Faction[] {
-        if(CachedFactions.length == 0) {
-            const theWorld = cm.model().world()
-            const factions = theWorld.faction_list()
-            for (let i = 0; i < factions.num_items(); i++) {
-                const theFaction = factions.item_at(i)
-                CachedFactions.push(new Faction(theFaction))
-            }
-        }
-        return CachedFactions
+        return Faction.GetFactions()
     }
 
     /**
@@ -30,15 +20,39 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         return faction.find( faction => faction.FactionKey == factionKey)
     }
 
+    /**
+     *  Get a wrapped IFactionScript inside Faction class given an IFactionScript object
+     * @param faction 
+     * @returns 
+     */
+    export function WrapIFactionScriptToFaction(faction: IFactionScript): Faction | undefined {
+        return GetFactionByKey(faction.name())
+    }
+
     export class Faction {
+        
+        static readonly CachedFactions: Faction[] = []
+        static GetFactions(): Faction[] {
+            if(Faction.CachedFactions.length == 0) {
+                const theWorld = cm.model().world()
+                const factions = theWorld.faction_list()
+                for (let i = 0; i < factions.num_items(); i++) {
+                    const theFaction = factions.item_at(i)
+                    Faction.CachedFactions.push(new Faction(theFaction))
+                }
+            }
+            return Faction.CachedFactions
+        }
+
         private factionInterface: IFactionScript
 
         /**
-         * Wraps IFactionScript object into Faction object so you can manipulate and query this faction with OOP style (no need to touch cm API again)
+         * Wraps IFactionScript object into Faction object so you can manipulate and query this faction with OOP style (no need to touch cm API again)  
+         * PRIVATE. Use WrapIFactionScriptToFaction(), GetFactions(), or GetFactionByKey() instead.
          * @param faction IFactionScript
          * @throws execption if the user puts invalid IFactionScript object (i.e if it's INullScript)
          */
-        constructor(faction: IFactionScript) {
+        private constructor(faction: IFactionScript) {
             this.factionInterface = faction
             if(this.factionInterface.is_null_interface()) {
                 FactionLogger.LogError(`the faction interface is null interface!`)
@@ -58,7 +72,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          * Check if this faction is human
          * @returns true if human
          */
-        public IsHuman(): boolean {
+        public get IsHuman(): boolean {
             return this.factionInterface.is_human()
         }
 
@@ -66,7 +80,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          *  Check if this faction is dead
          * @returns true if dead
          */
-        public IsDead(): boolean {
+        public get IsDead(): boolean {
             return this.factionInterface.is_dead()
         }
 
@@ -82,8 +96,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          * Check if the internal IFactionScript is valid
          * @returns true if still valid
          */
-        public IsValid(): boolean {
+        public get IsValid(): boolean {
             return !this.factionInterface.is_null_interface()
+        }
+
+        /** returns faction culture */
+        public get Culture(): string {
+            return this.GetFactionInterface().culture()
         }
 
         /**

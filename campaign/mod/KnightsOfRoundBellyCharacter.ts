@@ -46,7 +46,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
      * @returns 
      */
     export function WrapICharacterObjectListToCharacterArray(characterListObject: ICharacterListScript): Character[] {
-        let ret = []
+        const ret = []
         for (let i = 0; i < characterListObject.num_items(); i++) {
             ret.push(WrapICharacterObjectToCharacter(characterListObject.item_at(i)))            
         }
@@ -209,6 +209,25 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return this.characterObj           
         }
 
+        /** gets the faction that belongs to this character, wrapped in Faction object */
+        public get Faction(): Faction {
+            const faction = GetFactionByKey(this.GetFactionInterface().name())
+            if(faction == null) {
+                CharacterLogger.LogError(`faction of this character returns null! something horribly went wrong in the game engine!`)
+                throw(`faction of this character returns null! something horribly went wrong in the game engine!`)
+            }
+            return faction
+        }
+
+        /**
+         * Trigger faction incident associated with this characther
+         * @param incidentKey incident key from Incident table
+         */
+        public TriggerIncident(incidentKey: string): void {
+            const charCqi = this.CqiNo
+            cm.trigger_incident_with_targets(this.GetFactionInterface().command_queue_index(), incidentKey, 0, 0, charCqi, 0, 0, 0)
+        }
+
         /**
          * Renames this character (localised)
          * @param forename Localised forename key, in the `[table]_[key]_[field]` format. example: `"names_name_1053468021"`
@@ -226,6 +245,18 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          */
         public GetFactionInterface() : IFactionScript {
             return this.GetInternalInterface().faction()
+        }
+
+        /** gets all characters in a military force IF this character is IN military force, otherwise an empty array is returned */
+        public get AllCharactersInMilitaryForce(): Character[] {
+            if(!this.IsInMilitaryForce) return []
+            return WrapICharacterObjectListToCharacterArray(this.GetInternalInterface().military_force().character_list())
+        }
+        
+
+        /** Returns true if the character in military force */
+        public get IsInMilitaryForce(): boolean {
+            return this.GetInternalInterface().has_military_force()
         }
 
         /** (Getter) Forename key */
