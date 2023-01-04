@@ -223,7 +223,42 @@ interface ITeleportationScript extends INullScript {
 }
 
 interface IGarrisonResidenceScript extends INullScript {
-
+    /** Access the CQI of the garrison */
+    command_queue_index(): number
+    /** Is there a garrisoned army? */
+    has_army(): boolean
+    /** Is there a garrisoned navy? */
+    has_navy(): boolean
+    /** Access to the campaign model */
+    model(): IModelScript
+    /**  The faction that owns the garrison */
+    faction(): IFactionScript
+    /**  Returns the army in the garrison residence, if it has one otherwise it's INullScript */
+    army(): IMilitaryForceScript
+    /**  Returns the navy in the garrison residence, if it has one otherwise it's INullScript */
+    navy(): IMilitaryForceScript
+    /** The region for the garrison residence */
+    region(): IRegionScript
+    /** Number of units in a garrison */
+    unit_count(): number|0
+    /** Returns a list of buildings in the garrison */
+    buildings(): IBuildingScript
+    /**  Is the garrison under siege? */
+    is_under_siege(): boolean
+    /** Get the character besieging this garrison */
+    besieging_character(): ICharacterScript
+    /** Can the attacking army launch a seige */
+    can_assault(): boolean
+    /** Can the specified faction occupy this residence? */
+    can_be_occupied_by_faction(factionKey: string): boolean
+    /** Is this garrison a settlement type? */
+    is_settlement(): boolean
+    /**  Is this garrison a slot type? */
+    is_slot(): boolean
+    /** If this garrison is a settlement type, returns a settlement interface, otherwise INullScript */
+    settlement_interface(): ISettlementScript
+    /** If this garrison is a slot type, returns a slot interface, otherwise INullScript */
+    slot_interface(): ISlotScript
 }
 
 interface IRegionScript extends INullScript {
@@ -695,6 +730,21 @@ interface ICampaignManager {
     */
     force_add_skill(stringLookUp: string, skillKey: string): void
     /**
+     * Attempts to trigger an incident from database records with one or more target game objects. 
+     * The game object or objects to associate the incident with are specified by command-queue index. 
+     * The incident will need to pass any conditions set up in the cdir_events_incident_option_junctions table in order to trigger.
+     * A value of 0 may be supplied to omit a particular type of target.
+     * @param factionCqi  Command-queue index of the faction to which the incident is issued. This must be supplied.
+     * @param incidentKey Incident key, from the incidents table.
+     * @param targetFactionCqi 	Command-queue index of a target faction. 0 may be specified to omit this target (and other target arguments following this one).
+     * @param secondaryFactionCqi Command-queue index of a second target faction. May be 0.
+     * @param characterCqi Command-queue index of a target character. May be 0.
+     * @param militaryForceCqi Command-queue index of a target military force. May be 0.
+     * @param regionCqi Command-queue index of a target region. May be 0.
+     * @param settlementCqi Command-queue index of a target settlement. May be 0.
+     */
+    trigger_incident_with_targets( factionCqi: number, incidentKey: string, targetFactionCqi: number|0, secondaryFactionCqi: number|0, characterCqi: number|0, militaryForceCqi: number|0, regionCqi: number|0, settlementCqi: number|0): void
+    /**
      * Remove a skill point from the specified character and skill. Returns true if successful.
      * @param stringLookUp Character lookup string. For more information, see Character Lookups.
      * @param skillKey Skill key, from the character_skills table.
@@ -838,6 +888,7 @@ interface IContext {
     mission_result_success?(): boolean
     ranks_gained?(): number
     building?(): IBuildingScript
+    garrison_residence?(): IGarrisonResidenceScript
 }
 
 interface IRealTimer {
@@ -858,7 +909,7 @@ type Callback = {
 
 interface ICore {
     add_listener(listenerName: string, eventName: string, conditionalTest: ConditionalTest | Boolean, callback: Callback, persistsAfterCall :boolean): void
-    trigger_event(whatEvent: string): void
+    trigger_event(whatEvent: string, ...varag: any[]): void
     get_ui_root(): IUIComponent
 }
 
