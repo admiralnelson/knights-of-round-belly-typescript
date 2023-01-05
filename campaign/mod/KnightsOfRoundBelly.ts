@@ -354,6 +354,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOnCharacterLevelPaneDisableLouisMount()
             this.SpawnDukeLouisTest()
             this.SpawnHectorTest()
+
+            OgrePaladinVowHandler.AllowedOgreAgentKeys.add(HECTOR_AGENT_KEY)
+            OgrePaladinVowHandler.Init()
         }
 
         FirstTimeSetup(): void {
