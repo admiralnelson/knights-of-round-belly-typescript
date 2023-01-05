@@ -96,7 +96,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          * Check if the internal IFactionScript is valid
          * @returns true if still valid
          */
-        public get IsValid(): boolean {
+        public IsValid(): boolean {
             return !this.factionInterface.is_null_interface()
         }
 

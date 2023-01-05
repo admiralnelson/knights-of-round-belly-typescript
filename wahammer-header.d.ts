@@ -154,7 +154,36 @@ interface IProvinceScript extends INullScript {
 }
 
 interface ISettlementScript extends INullScript {
-
+    /**  Returns the string key of this settlement */
+    key(): string
+    cqi(): number
+    has_commander(): boolean
+    logical_position_x(): number
+    logical_position_y(): number
+    display_position_x(): number
+    display_position_y(): number
+    /** Building chain used to display this settlement. May not be the same as the logical building chain */
+    display_primary_building_chain(): string
+    /** Primary building chain of this settlement */
+    primary_building_chain(): string
+    model(): IModelScript
+    /** Returns the embedded military force commander 
+     * @returns can return INullScript if if the settlement does not have a commander
+     */
+    commander(): ICharacterScript
+    faction(): IFactionScript
+    region(): IRegionScript
+    slot_list(): ISlotListScript
+    is_port(): boolean
+    /**  Get the climate key for a settlement */
+    get_climate(): string
+    primary_slot(): ISlotScript
+    /** Get the port slot for this settlement if it exists, INullScript if it doesn't */
+    port_slot(): ISlotScript
+    /** Get a list of all of the active secondary slots in this settlement. Try not to spam call this */
+    active_secondary_slots(): ISlotListScript
+    /** Get the first empty active secondary slot from the settement. May be INullScript if none are available */
+    first_empty_active_secondary_slot(): ISlotScript
 }
 
 interface ISlotScript extends INullScript {
@@ -418,6 +447,61 @@ interface IMilitaryForceScript extends INullScript {
     lookup_streak_value(streakKey: string): number
 }
 
+interface IPendingBattleScript extends INullScript {
+    has_attacker(): boolean
+    has_defender(): boolean
+    has_contested_garrison(): boolean
+    model(): IModelScript
+    attacker(): ICharacterScript
+    secondary_attackers(): ICharacterScript
+    defender(): ICharacterScript
+    secondary_defenders(): ICharacterScript
+    contested_garrison(): IGarrisonResidenceScript
+    is_active(): boolean
+    attacker_is_stronger(): boolean
+    percentage_of_attacker_killed(): number
+    percentage_of_defender_killed(): number
+    percentage_of_attacker_routed(): number
+    percentage_of_defender_routed(): number
+    attacker_commander_fought_in_battle(): boolean
+    defender_commander_fought_in_battle(): boolean
+    attacker_commander_fought_in_melee(): boolean
+    defender_commander_fought_in_melee(): boolean
+    attacker_won(): boolean
+    defender_won(): boolean
+    is_draw(): boolean
+    attacker_battle_result(): "close_victory"|"decisive_victory"|"heroic_victory"|"pyrrhic_victory"|"close_defeat"|"decisive_defeat"|"crushing_defeat"|"valiant_defeat"
+    defender_battle_result(): "close_victory"|"decisive_victory"|"heroic_victory"|"pyrrhic_victory"|"close_defeat"|"decisive_defeat"|"crushing_defeat"|"valiant_defeat"
+    attacker_casulaties(): number
+    defender_casulaties(): number
+    attacker_kills(): number
+    defender_kills(): number
+    attacker_ending_cp_kill_score(): number
+    defender_ending_cp_kill_score(): number
+    attacker_total_hp_lost(): number
+    defender_total_hp_lost(): number
+    naval_battle(): boolean
+    siege_battle(): boolean
+    ambush_battle(): boolean
+    failed_ambush_battle(): boolean
+    night_battle(): boolean
+    /** The battle type. Asks a programmer for the battle type strings (found in campaign_battle_type_enum_ids, campaignbonusvalues.cpp???) */
+    battle_type(): string
+    attacker_strength(): number
+    defender_strength(): number
+    has_been_fought(): boolean
+    set_piece_battle_key(): string
+    /** True if the pending battle has the specified tile upgrade tag.? */
+    has_scripted_tile_upgrade(tag: string): boolean
+    /** Expects a faction CQI for and the String tag for the unit ability in question and will return the number of times it was used. */
+    get_how_many_times_ability_has_been_used_in_battle(factionCqi: number, tag: string): number
+    region_data(): IRegionDataScript
+    logical_position(): LuaMultiReturn<[x: number, y: number]>
+    display_position(): LuaMultiReturn<[realX: number, realY: number]>
+    is_auto_resolved(): boolean
+    ended_with_withdraw(): boolean
+}
+
 interface ICharacterScript extends INullScript, ICharacterDetailsScript, IModelScript {
     command_queue_index(): number
     has_garrison_residence(): boolean
@@ -452,8 +536,10 @@ interface ICharacterScript extends INullScript, ICharacterDetailsScript, IModelS
     defensive_sieges_won(): number
     offensive_sieges_fought(): number
     offensive_sieges_won(): number
+    /** Did the character fight in missile or melee combat in the battle? */
     fought_in_battle(): boolean
-    won_battle(): number
+    /** Was the character in the winning alliance in a battle? */
+    won_battle(): boolean
     percentage_of_own_alliance_killed(): number
     ministerial_position(): string
     logical_position_x(): number
@@ -693,6 +779,57 @@ interface ICharacterDetailsScript extends INullScript {
     character(): ICharacterScript
 }
 
+interface IArmoryScript extends INullScript {
+    /** 
+     * Get the current equipment state of the family member, 
+     * please refer to the armory_slot_types table for their names and to ARMORY_SLOT_TYPE which position in your result will contain which your slot. 
+     * slot entries can be null signifying an empty slot. 
+     * */
+    get_all_active_variant_slot_states(): string[]
+    /**
+     *  Get the currently registered armory items of the family member.
+     */
+    get_currently_registered_armory_items(): string[]
+    /**
+     * Get the number of equipped items belonging to a given category.
+     * @param categoryKey 
+     */
+    number_of_equipped_items_of_category(categoryKey: string): number 
+    /**
+     *  Get the number of equipped items belonging to a given ui type.
+     * @param uiTypeKey 
+     */
+    number_of_equipped_items_of_ui_type(uiTypeKey: string): number
+
+}
+
+interface IFamilyMemberScript extends INullScript {
+    
+    /** returns true if this family member has a father (doesn't make sense on Warhammer games, I know) */
+    has_father(): boolean
+    /** returns true if this family member has a mother (doesn't make sense on Warhammer games, I know) */
+    has_mother(): boolean
+    /** returns IFamilyMemberScript if this family member has a father (doesn't make sense on Warhammer games, I know) */
+    father(): IFamilyMemberScript
+    /** returns IFamilyMemberScript if this family member has a mother (doesn't make sense on Warhammer games, I know) */
+    mother(): IFamilyMemberScript
+    /**
+     * return true if the character has the trait
+     * @param traitKey trait key
+     */
+    has_trait(traitKey: string): boolean
+    /** return if the character has come of age (doesn't make sense on Warhammer games, I know) */
+    come_of_age(): boolean
+    command_queue_index(): number
+    /** return persistent character details assosciated with this family member/character */
+    character_details(): ICharacterDetailsScript
+    /** return the armory interface for the current family member */
+    armory(): IArmoryScript
+    /** return the character attached to this family member. May be INullScript if the character is dead */
+    character(): ICharacterScript
+
+}
+
 
 type CallbackCreateForce = {
     (cqi: number): void
@@ -874,6 +1011,40 @@ This function can also reposition the camera, so it's best used on game creation
      * @param destroyTheForceToo optional, default value=false Will also destroy the characters whole force if true.
      */
     kill_character(stringLookupOrCqiNo: string | number, destroyTheForceToo?: boolean): void
+    /** Returns true if the pending battle has been won by the attacker, false otherwise. */
+    pending_battle_cache_attacker_victory(): boolean
+    /** Returns true if the pending battle has been won by the defender, false otherwise. */
+    pending_battle_cache_defender_victory(): boolean
+    /** Returns the number of attacking armies in the cached pending battle.
+     * @returns number of attacking armies
+     */
+    pending_battle_cache_num_attackers(): number
+    /**
+     * Returns the family member cqi of a particular attacker in the cached pending battle. The attacker is specified by numerical index, with the first being accessible at record 1.
+     * @param index index of attacker
+     * @returns  family member cqi
+     */
+    pending_battle_cache_get_attacker_fm_cqi(index: number): number
+    /**
+     * Returns the family member cqi of a particular defender in the cached pending battle. The defender is specified by numerical index, with the first being accessible at record 1.
+     * @param index index of defender
+     */
+    pending_battle_cache_get_defender_fm_cqi(index: number): number
+    /**
+     * Returns a family member by it's command queue index. If no family member with the supplied cqi is found then false is returned.
+     * @param cqiNumber cqi
+     */
+    get_family_member_by_cqi(cqiNumber: number): IFamilyMemberScript
+    /**
+     * Returns the number of defending armies in the cached pending battle.
+     * @returnds number of defending armies (forces you see in the campaign map)
+     */
+    pending_battle_cache_num_defenders(): number
+    /** Returns true if the supplied character is a general and has an army, false otherwise. 
+     * This includes garrison commanders - to only return true if the army is mobile use `cm.char_is_mobile_general_with_army`
+     * @character character
+     */
+    char_is_general_with_army(character: ICharacterScript): boolean
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
@@ -889,6 +1060,7 @@ interface IContext {
     ranks_gained?(): number
     building?(): IBuildingScript
     garrison_residence?(): IGarrisonResidenceScript
+    pending_battle?(): IPendingBattleScript
 }
 
 interface IRealTimer {
@@ -905,6 +1077,14 @@ type ConditionalTest = {
 }
 type Callback = {
     (context: IContext) : void
+}
+
+type ConstString2Number = { 
+    [id: string]: number; 
+}
+
+type ConstString2String = {
+    [id: string]: string
 }
 
 interface ICore {

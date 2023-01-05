@@ -247,6 +247,18 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return this.GetInternalInterface().faction()
         }
 
+        /**
+         * (getter) Was the character in the winning alliance in a battle?
+         */
+        public get IsRecentlyWonBattle(): boolean {
+            return this.GetInternalInterface().won_battle()
+        }
+
+        /** (getter) Character is at sea? */
+        public get IsAtSea(): boolean {
+            return this.GetInternalInterface().is_at_sea()
+        }
+
         /** gets all characters in a military force IF this character is IN military force, otherwise an empty array is returned */
         public get AllCharactersInMilitaryForce(): Character[] {
             if(!this.IsInMilitaryForce) return []
@@ -302,6 +314,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         /** (Getter) is the character in valid region? */
         public get IsInRegion(): boolean {
             return this.GetInternalInterface().has_region()
+        }
+
+        /**
+         * Returns true if the character is a general and has an army, false otherwise.
+         */
+        public get IsGeneralAndHasArmy(): boolean {
+            return cm.char_is_general_with_army(this.GetInternalInterface())
         }
 
         /** (Getter) get character region key */
@@ -369,6 +388,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          */
         public IsEqual(otherCharacter: Character): boolean {
             return this.CqiNo == otherCharacter.CqiNo
+        }
+
+        /**
+         * Rather than doing this lordA == lordB (although both instances have the same reference, the objects wrapper are still different), use this method to check if both object is equal
+         * @param otherCharacter 
+         * @returns 
+         */
+        public HasSameInternalReferenceTo(otherCharacter: ICharacterScript): boolean {
+            return this.CqiNo == otherCharacter.cqi()
         }
 
         /** returns the agentsubtype key of this object */
