@@ -1,30 +1,34 @@
 namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
+    const DEBUG = true
+
     export const VERSION = 1
     export const ADMKNIGHTSOFTHEROUNDBELLY = "ADMKNIGHTSOFTHEROUNDBELLY:v"+VERSION
 
     const PEASANTS_EFFECT_PREFIX = "wh_dlc07_bundle_peasant_penalty_"
 
-    const LOUIS_MISSION_KEY    = "admiralnelson_louis_grand_mace_mission_key"
+    export const LOUIS_MISSION_KEY    = "admiralnelson_louis_grand_mace_mission_key"
 
-    const DUKE_LOUIS_AGENT_KEY = "admnelson_bret_ogre_louis_le_gros_agent_key"
-    const HECTOR_AGENT_KEY = "admnelson_bret_ogre_hector_de_maris_agent_key"
+    export const DUKE_LOUIS_AGENT_KEY = "admnelson_bret_ogre_louis_le_gros_agent_key"
+    export const HECTOR_AGENT_KEY = "admnelson_bret_ogre_hector_de_maris_agent_key"
+    export const CLAUDIN_AGENT_KEY = "admnelson_bret_ogre_claudin_agent_key"
 
-    const DUKE_LOUIS_FORENAME = "names_name_11382017"; const DUKE_LOUIS_TITLE = "names_name_11382018"
-    const HECTOR_FORENAME = "names_name_11382022"; const HECTOR_HOUSE_OF = "names_name_11382023"
+    export const DUKE_LOUIS_FORENAME = "names_name_11382017"; export const DUKE_LOUIS_TITLE = "names_name_11382018"
+    export const HECTOR_FORENAME = "names_name_11382022"; export const HECTOR_HOUSE_OF = "names_name_11382023"
+    export const CLAUDIN_FORENAME = "names_name_11382019"; export const CLAUDIN_HOUSE_OF = "names_name_11382020"
     
     const CIVILISED_SKILL_KEY     = "admiralnelson_ogre_civilised_characther_skills_1_skill_key"
     const OGRE_SKILL_KEY          = "admiralnelson_ogre_being_is_generally_unchivalrous_and_savage_skills_key_background_skill_scripted"
     const GREATER_GIRTH_SKILL_KEY = "admiralnelson_wh3_main_skill_ogr_tyrant_unique_greater_girth"
     const LOUIS_MOUNT_SKILL_KEY   = "admiralnelson_louis_mount_unlock_item_skill_key"
     
-    const PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_not_commited_yet_scripted_trait_key"
-    const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
+    export const PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_not_commited_yet_scripted_trait_key"
+    export const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
 
-    class KnightsOfTheRoundBelly {
-
+    export class KnightsOfTheRoundBelly {
+        
         private readonly l: Logger = new Logger("AdmiralNelsonKnightsOfTheRoundBelly")
-
+        
         private OgreChampions = [
             DUKE_LOUIS_AGENT_KEY,
             "admnelson_bret_ogre_claudin_agent_key",
@@ -79,75 +83,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         private designatedFaction: Faction | null = null
 
-        SpawnDukeLouisTest(): void {
-            if(this.designatedFaction == null) {
-                this.l.LogError(`SpawnDukeLouisTest - this.designatedFaction is null`)
-                return
-            }
-            new Lord({ 
-                factionKey: this.designatedFaction.FactionKey,
-                agentKey: DUKE_LOUIS_AGENT_KEY,
-                regionKey: "wh3_main_combi_region_couronne",
-                lordCreatedCallback: (lord) => {
-                    this.designatedFaction?.TriggerMission(LOUIS_MISSION_KEY, true)
-                    lord.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
-                    lord.RenameLocalised(DUKE_LOUIS_FORENAME, DUKE_LOUIS_TITLE)
-                    setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
-                    const testArmy = []
-                    for(let i = 1; i <= 10; i++) {
-                        testArmy.push("wh_dlc07_brt_cav_royal_hippogryph_knights_0")
-                    }
-                    lord.AddTroops(testArmy)
-                }
-            })
-
-            this.l.LogWarn("SpawnDukeLouisTest ok")
-        }
-
-        SpawnHectorTest(): void {
-            if(this.designatedFaction == null) {
-                this.l.LogError(`SpawnHectorTest - this.designatedFaction is null`)
-                return
-            }
-            const factionKey = this.designatedFaction.FactionKey
-            new Champion({
-                agentKey: HECTOR_AGENT_KEY,
-                factionKey: factionKey,
-                regionKey: "wh3_main_combi_region_couronne",
-                agentType: "champion",
-                championCreatedCallback: (champion, reason) => {
-                    champion.RenameLocalised(HECTOR_FORENAME, HECTOR_HOUSE_OF)
-                    champion.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
-                    setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500);
-                }
-            })
-            this.l.LogWarn(`SpawnHectorTest ok`)
-        }
-
-        SpawnEnemyTest(): void {
-            for (let i = 0; i < 5; i++) {
-                new Lord({ 
-                    factionKey: "wh_main_emp_marienburg",
-                    regionKey:  "wh3_main_combi_region_couronne",
-                    agentKey: "wh_main_emp_lord",
-                    lordCreatedCallback: (lord) => {
-                        this.l.Log(`dummy lord has spawned ${lord.LocalisedFullName}`)
-                    }
-                })                
-            }
-        }
-
-        KillAllOgres(): void {
-            if(this.designatedFaction == null) {
-                this.l.LogError(`KillAllOgres: cant execute this.designatedFaction is null`)
-                return
-            }
-            const faction = this.designatedFaction
-            const lords = faction.Lords
-
-            for (const lord of lords) {
-                lord.Destroy()
-            }         
+        get DesignatedFaction(): Faction | null {
+            return this.designatedFaction
         }
 
         FindAllOgres(): Character[] {
@@ -280,9 +217,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }
             this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.SubtypeKey} whatQuest ${whatQuest}`)
             if(whichOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) whichOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
-            if(whichOgre.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) <= 0 && whatQuest == "KnightsVow")  whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)
-            if(whichOgre.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) == 1 && whatQuest == "QuestingVow") whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)
-            if(whichOgre.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) == 2 && whatQuest == "GrailVow")    whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)
+            whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)            
             this.CalculatePeasantSlotsUsageAndApplyPenalties()
         }
 
@@ -363,7 +298,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         Init(): void {
             this.FirstTimeSetup()
             this.SetupDesignatedFaction()
-            //this.KillAllOgres()
             this.SetupOnOgreChampionSpawned()
             this.SetupOnSkillAllocated()
             this.SetupOnCharacterRankUp()
@@ -371,32 +305,17 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOnFactionTurnStart()
             this.SetupOnFactionTurnEnd()
             this.SetupTestTimer()
-            this.SetupOnCharacterLevelPaneDisableLouisMount()
-            if(this.FindAllOgres().length == 0) {
-                this.SpawnDukeLouisTest()
-                this.SpawnHectorTest()
-                this.SpawnEnemyTest()
-            }
+            this.SetupOnCharacterLevelPaneDisableLouisMount()            
 
             OgrePaladinVowHandler.AllowedOgreAgentKeys.add(HECTOR_AGENT_KEY)
             OgrePaladinVowHandler.Init()
-            const x = GetFactionByKey("wh_main_brt_bretonnia")?.Champions || []
-            for (const y of x) {
-                this.l.Log(y.toString())
-            }
-            setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 200);
-            setTimeout(() => { 
-                if(this.designatedFaction == null) return
 
-                const lords = this.designatedFaction.Characters
-                for (const lord of lords) {
-                    this.l.Log(`${lord.LocalisedFullName} traits = ${JSON.stringify(lord.Traits)}`)
-                }
-                const champions = this.designatedFaction.Champions
-                for (const champion of champions) {
-                    this.l.Log(`${champion.LocalisedFullName} traits = ${JSON.stringify(champion.Traits)}`)
-                }
-            }, 200);
+            /** START TEST SUITE */
+            if(this.FindAllOgres().length == 0 && DEBUG) {
+                StartTestSuite(this)
+            }
+            
+            setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 200);
         }
 
         FirstTimeSetup(): void {
