@@ -167,15 +167,22 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 const theArmy = armies.item_at(i)
                 if(!theArmy.is_armed_citizenry() && theArmy.has_general()) {
                     const theGeneral = theArmy.general_character()
-                    //this.l.Log(`iterating ${theGeneral.character_subtype_key()}`)
-                    result.push(new Lord({characterObject: theGeneral}))
+                    const toCharacter = WrapICharacterObjectToCharacter(theGeneral)
+                    const toLord = TryCastCharacterToLord(toCharacter)
+                    if(toLord != null && toLord.IsGeneralAndHasArmy) result.push(toLord)
                 }
             }    
             return result
         }
 
         public get Champions(): Champion[] {
-            return []
+            const characters = this.Characters
+            const result = []
+            for (const char of characters) {
+                const champion = TryCastCharacterToChampion(char)
+                if(champion) result.push(champion) 
+            }
+            return result
         }
 
         /**(Getter) array of effect bundle keys on this faction */
