@@ -93,7 +93,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     lord.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
                     lord.RenameLocalised(DUKE_LOUIS_FORENAME, DUKE_LOUIS_TITLE)
                     setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
-                    lord.AddTroops(["wh_dlc07_brt_cav_royal_hippogryph_knights_0", "wh_dlc07_brt_cav_royal_hippogryph_knights_0", "wh_dlc07_brt_cav_royal_hippogryph_knights_0"])
+                    const testArmy = []
+                    for(let i = 1; i <= 10; i++) {
+                        testArmy.push("wh_dlc07_brt_cav_royal_hippogryph_knights_0")
+                    }
+                    lord.AddTroops(testArmy)
                 }
             })
 
@@ -118,6 +122,19 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 }
             })
             this.l.LogWarn(`SpawnHectorTest ok`)
+        }
+
+        SpawnEnemyTest(): void {
+            for (let i = 0; i < 5; i++) {
+                new Lord({ 
+                    factionKey: "wh_main_emp_marienburg",
+                    regionKey:  "wh3_main_combi_region_couronne",
+                    agentKey: "wh_main_emp_lord",
+                    lordCreatedCallback: (lord) => {
+                        this.l.Log(`dummy lord has spawned ${lord.LocalisedFullName}`)
+                    }
+                })                
+            }
         }
 
         KillAllOgres(): void {
@@ -263,7 +280,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }
             this.l.LogWarn(`GiveOgreLessPenaltiesForCompletingGrailQuests triggered. whichOgre ${whichOgre.SubtypeKey} whatQuest ${whatQuest}`)
             if(whichOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) whichOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
-            whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)
+            if(whichOgre.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) <= 0 && whatQuest == "KnightsVow")  whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)
+            if(whichOgre.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) == 1 && whatQuest == "QuestingVow") whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)
+            if(whichOgre.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) == 2 && whatQuest == "GrailVow")    whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)
             this.CalculatePeasantSlotsUsageAndApplyPenalties()
         }
 
@@ -297,7 +316,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 const cqi = context?.Call(`CQI()`) as number
                 const theCharacter = FindCharacter(cqi)
                 if(theCharacter) {
-                    if(theCharacter.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) >= 2) return
+                    if(OgrePaladinVowHandler.IsQuestingVowOK(theCharacter) || 
+                       OgrePaladinVowHandler.IsGrailVowOK(theCharacter)) return
                 }
             }
 
@@ -352,11 +372,31 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOnFactionTurnEnd()
             this.SetupTestTimer()
             this.SetupOnCharacterLevelPaneDisableLouisMount()
-            this.SpawnDukeLouisTest()
-            this.SpawnHectorTest()
+            if(this.FindAllOgres().length == 0) {
+                this.SpawnDukeLouisTest()
+                this.SpawnHectorTest()
+                this.SpawnEnemyTest()
+            }
 
             OgrePaladinVowHandler.AllowedOgreAgentKeys.add(HECTOR_AGENT_KEY)
             OgrePaladinVowHandler.Init()
+            const x = GetFactionByKey("wh_main_brt_bretonnia")?.Champions || []
+            for (const y of x) {
+                this.l.Log(y.toString())
+            }
+            setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 200);
+            setTimeout(() => { 
+                if(this.designatedFaction == null) return
+
+                const lords = this.designatedFaction.Characters
+                for (const lord of lords) {
+                    this.l.Log(`${lord.LocalisedFullName} traits = ${JSON.stringify(lord.Traits)}`)
+                }
+                const champions = this.designatedFaction.Champions
+                for (const champion of champions) {
+                    this.l.Log(`${champion.LocalisedFullName} traits = ${JSON.stringify(champion.Traits)}`)
+                }
+            }, 200);
         }
 
         FirstTimeSetup(): void {
