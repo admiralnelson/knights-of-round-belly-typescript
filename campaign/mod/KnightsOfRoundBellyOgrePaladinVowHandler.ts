@@ -1,64 +1,146 @@
 namespace AdmiralNelsonKnightsOfTheRoundBelly {
     
-    const  VOW_MAX_POINTS: ConstString2Number = {
-        ["wh_dlc07_trait_brt_questing_vow_campaign_pledge"] : 2, //should 
-	    ["wh_dlc07_trait_brt_questing_vow_heroism_pledge"] : 2,  //be
-	    ["wh_dlc07_trait_brt_questing_vow_protect_pledge"] : 2,  //1
-	    ["wh_dlc07_trait_brt_grail_vow_untaint_pledge"] : 2      //instead of 2?
-    }
+    const KNOWLEDGE_PLEDGE_TRAIT = "wh_dlc07_trait_brt_knights_vow_knowledge_pledge_agent"
+    const CHIVALRY_PLEDGE_TRAIT = "wh_dlc07_trait_brt_knights_vow_chivalry_pledge_agent"
+    const ORDER_PLEDGE_TRAIT = "wh_dlc07_trait_brt_knights_vow_order_pledge_agent"
+    const KNIGHT_VOW_TRAITS = [
+        KNOWLEDGE_PLEDGE_TRAIT, 
+        CHIVALRY_PLEDGE_TRAIT, 
+        ORDER_PLEDGE_TRAIT
+    ]
+
+    const HEROISM_PLEDGE_TRAIT = "wh_dlc07_trait_brt_questing_vow_heroism_pledge_agent"
+    const CAMPAIGN_PLEDGE_TRAIT = "wh_dlc07_trait_brt_questing_vow_campaign_pledge_agent"
+    const PROTECT_PELDGE_TRAIT = "wh_dlc07_trait_brt_questing_vow_protect_pledge_agent"
+    const QUESTING_VOW_TRAITS = [
+        HEROISM_PLEDGE_TRAIT,
+        CAMPAIGN_PLEDGE_TRAIT,
+        PROTECT_PELDGE_TRAIT
+    ]
+
+
+    const VALOUR_PLEDGE_TRAIT = "wh_dlc07_trait_brt_grail_vow_valour_pledge_agent"
+    const DESTROY_PLEDGE_TRAIT = "wh_dlc07_trait_brt_grail_vow_destroy_pledge_agent"
+    const UNTAINT_PLEDGE_TRAIT = "wh_dlc07_trait_brt_grail_vow_untaint_pledge_agent"
+    const GRAIL_VOW_TRAITS = [
+        VALOUR_PLEDGE_TRAIT,
+        DESTROY_PLEDGE_TRAIT,
+        UNTAINT_PLEDGE_TRAIT
+    ]
 
     const VOW_LEGENDARY_LORD_CULTURES: ConstString2String = {
-        ["wh_main_chs_chaos"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh3_main_dae_daemons"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh3_main_kho_khorne"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh3_main_nur_nurgle"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh3_main_sla_slaanesh"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh3_main_tze_tzeentch"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh2_main_skv_skaven"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh_main_vmp_vampire_counts"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh2_dlc11_cst_vampire_coast"] : "wh_dlc07_trait_brt_grail_vow_untaint_pledge",
-        ["wh_dlc03_bst_beastmen"] : "wh_dlc07_trait_brt_questing_vow_protect_pledge",
-        ["wh_main_grn_greenskins"] : "wh_dlc07_trait_brt_questing_vow_protect_pledge",
-        ["wh2_main_def_dark_elves"] : "wh_dlc07_trait_brt_questing_vow_protect_pledge",
-        ["wh3_main_ogr_ogre_kingdoms"] : "wh_dlc07_trait_brt_questing_vow_protect_pledge"
+        ["wh_main_chs_chaos"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh3_main_dae_daemons"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh3_main_kho_khorne"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh3_main_nur_nurgle"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh3_main_sla_slaanesh"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh3_main_tze_tzeentch"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh2_main_skv_skaven"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh_main_vmp_vampire_counts"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh2_dlc11_cst_vampire_coast"] : UNTAINT_PLEDGE_TRAIT,
+        ["wh_dlc03_bst_beastmen"] : PROTECT_PELDGE_TRAIT,
+        ["wh_main_grn_greenskins"] : PROTECT_PELDGE_TRAIT,
+        ["wh2_main_def_dark_elves"] : PROTECT_PELDGE_TRAIT,
+        ["wh3_main_ogr_ogre_kingdoms"] : PROTECT_PELDGE_TRAIT
     }
+
+
+    const  VOW_MAX_POINTS: ConstString2Number = {
+        [CAMPAIGN_PLEDGE_TRAIT] : 2, //should 
+	    [HEROISM_PLEDGE_TRAIT] : 2,  //be
+	    [PROTECT_PELDGE_TRAIT] : 2,  //1
+	    [PROTECT_PELDGE_TRAIT] : 2      //instead of 2?
+    }
+
 
     const MAX_POINTS = 6
 
     const logger = new Logger("OgrePaladinVowHandler")
     const print = (x: string) => logger.Log(x)
 
+    type LinkedList = {
+        Data: string
+        Next?: LinkedList
+    }
+
     export class OgrePaladinVowHandler {
 
         static AllowedOgreAgentKeys : LuaSet<string> = new LuaSet<string>()
         private static bInited = false
 
+
+        public static IsKnightsVowOK(character: Character): boolean {
+            for (const trait of KNIGHT_VOW_TRAITS) {
+                const maxTraitLevel = VOW_MAX_POINTS[trait] || 6
+                if(character.GetTraitLevel(trait) == maxTraitLevel) return true
+            }
+            return false
+        }
+        
+        public static IsQuestingVowOK(character: Character): boolean {
+            for (const trait of QUESTING_VOW_TRAITS) {
+                const maxTraitLevel = VOW_MAX_POINTS[trait] || 6
+                if(character.GetTraitLevel(trait) == maxTraitLevel) return true
+            }
+            return false
+        }
+
+        public static IsGrailVowOK(character: Character): boolean {
+            for (const trait of GRAIL_VOW_TRAITS) {
+                const maxTraitLevel = VOW_MAX_POINTS[trait] || 6
+                if(character.GetTraitLevel(trait) == maxTraitLevel ) return true
+            }
+            return false
+        }
+
+        private static IsVowHasPassed(character: Character, traitKey: string) {
+
+            if(traitKey.startsWith("wh_dlc07_trait_brt_knights_vow")) {
+                return OgrePaladinVowHandler.IsKnightsVowOK(character) &&
+                      !OgrePaladinVowHandler.IsQuestingVowOK(character) &&
+                      !OgrePaladinVowHandler.IsGrailVowOK(character)
+            } else if(traitKey.startsWith("wh_dlc07_trait_brt_questing_vow")) {                
+                return OgrePaladinVowHandler.IsKnightsVowOK(character) && 
+                       OgrePaladinVowHandler.IsQuestingVowOK(character) &&
+                      !OgrePaladinVowHandler.IsGrailVowOK(character)
+            } else if (traitKey.startsWith("wh_dlc07_trait_brt_grail_vow")) {
+                return OgrePaladinVowHandler.IsKnightsVowOK(character) && 
+                       OgrePaladinVowHandler.IsQuestingVowOK(character) && 
+                       OgrePaladinVowHandler.IsGrailVowOK(character)
+            }
+
+            return false
+        }
+
         private static CheckIfTraitEnoughToTriggerEvent(character: Character, traitKey: string) {
             print(`AddVowProgress - ${character.LocalisedFullName}  trait ${traitKey} `)
-            const faction = character.Faction
-            const traitLevel = character.GetTraitLevel(traitKey)
+            print(`traits on this character: ${JSON.stringify(character.Traits)}`)
+            if (!character.HasTrait(traitKey)) return
+
             const maxTraitLevel = VOW_MAX_POINTS[traitKey] || MAX_POINTS
+            const traitLevel = character.GetTraitLevel(traitKey)
+
             print(`Max Points - " .. ${maxTraitLevel}`)
 
             const incidentKey = "wh_dlc07_incident_brt_vow_gained"
-            if(traitLevel <= maxTraitLevel) {
-                print(`adding trait ${traitKey}`)
-                character.AddTrait(traitKey, false)
-                const newTraitLevel = character.GetTraitLevel(traitKey)
-                print(`new trait level is ${traitKey}`)
-
-                if(newTraitLevel >= MAX_POINTS) {
-                    print(`Triggering event for this character ${character.LocalisedFullName}`)
-                    character.TriggerIncident(incidentKey)
-
-                    if(traitKey.startsWith("wh_dlc07_trait_brt_knights_vow")) {
-                        core.trigger_event("ScriptEventBretonniaKnightsVowCompleted", character.GetInternalInterface())
-                    } else if (traitKey.startsWith("wh_dlc07_trait_brt_questing_vow")) {
-                        core.trigger_event("ScriptEventBretonniaQuestingVowCompleted", character.GetInternalInterface())
-                    }  else if (traitKey.startsWith("wh_dlc07_trait_brt_grail_vow")) {
-                        core.trigger_event("ScriptEventBretonniaGrailVowCompleted", character.GetInternalInterface())
-                    }
-                }
+            
+            const newTraitLevel = character.GetTraitLevel(traitKey)
+            print(`new trait level is ${traitKey}`)
+            //character.AddTrait(traitKey, false) -- no need to
+            if(traitKey.startsWith("wh_dlc07_trait_brt_knights_vow") && OgrePaladinVowHandler.IsVowHasPassed(character, traitKey)) {
+                print(`Triggering event for this character ${character.LocalisedFullName}`)
+                character.TriggerIncident(incidentKey)
+                core.trigger_event("ScriptEventBretonniaKnightsVowCompleted", character.GetInternalInterface())
+            }
+            if(traitKey.startsWith("wh_dlc07_trait_brt_questing_vow")  && OgrePaladinVowHandler.IsVowHasPassed(character, traitKey)) {
+                print(`Triggering event for this character ${character.LocalisedFullName}`)
+                character.TriggerIncident(incidentKey)
+                core.trigger_event("ScriptEventBretonniaQuestingVowCompleted", character.GetInternalInterface())
+            }
+            if (traitKey.startsWith("wh_dlc07_trait_brt_grail_vow")  && OgrePaladinVowHandler.IsVowHasPassed(character, traitKey)) {
+                print(`Triggering event for this character ${character.LocalisedFullName}`)
+                character.TriggerIncident(incidentKey)
+                core.trigger_event("ScriptEventBretonniaGrailVowCompleted", character.GetInternalInterface())
             }
         }
 
@@ -66,8 +148,18 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const charaters = WrapICharacterObjectListToCharacterArray(whichForce.character_list())
             for (const character of charaters) {
                 if(OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) {
-                    character.AddTrait(traitKey, false)
-                    OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, traitKey)
+                    print(`traits on this character ${character.LocalisedFullName} traits: ${JSON.stringify(character.Traits)}`)
+                    if(traitKey.startsWith("wh_dlc07_trait_brt_questing_vow") && OgrePaladinVowHandler.IsKnightsVowOK(character)) {                
+                        if(character.GetTraitLevel(traitKey) > 0) {
+                            character.AddTrait(traitKey, false)
+                        }
+                        OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, traitKey)
+                    } else if (traitKey.startsWith("wh_dlc07_trait_brt_grail_vow") && OgrePaladinVowHandler.IsQuestingVowOK(character)) {
+                        if(character.GetTraitLevel(traitKey) > 0) {
+                            character.AddTrait(traitKey, false)
+                        }
+                        OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, traitKey)
+                    }                    
                 }
             }
         }
@@ -83,7 +175,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 //ogre only          
                 if(!OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) return
 
-                const trait = "wh_dlc07_trait_brt_knights_vow_knowledge_pledge_agent"
+                const trait = KNOWLEDGE_PLEDGE_TRAIT
                 if(character.GetTraitLevel(trait) > 0) {
                     character.AddTrait(trait, false)
                 }
@@ -92,18 +184,20 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }
         }
 
-        //MUST be in army
+        //doesn't need to be in army
         private static AddPledgeToKnowledgeResearchTrait(context: IContext) {            
             if(context.faction == null) return
             const faction = WrapIFactionScriptToFaction(context.faction())
             if(!faction?.IsHuman) return
             if(faction.Culture != "wh_main_brt_bretonnia") return
 
-            const characters = faction.Characters
-            for (const character of characters) {
-                const trait = "wh_dlc07_trait_brt_knights_vow_knowledge_pledge_agent"
-                if(character.IsGeneralAndHasArmy) {
-                    OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(character.GetInternalInterface().military_force(), trait)
+            const champions = faction.Champions
+            for (const champion of champions) {
+                //ogre only
+                if(OgrePaladinVowHandler.AllowedOgreAgentKeys.has(champion.SubtypeKey)) {
+                    const trait = KNOWLEDGE_PLEDGE_TRAIT
+                    champion.AddTrait(trait, false)
+                    OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(champion, trait)
                 }
             }
         }
@@ -118,7 +212,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             if(!OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) return
 
             const ranksGained = context.ranks_gained()
-            const trait = "wh_dlc07_trait_brt_knights_vow_chivalry_pledge_agent"
+            const trait = CHIVALRY_PLEDGE_TRAIT
 
             if(character.GetTraitLevel(trait) > 0) {
                 for (let i = 0; i < ranksGained; i++) {
@@ -136,7 +230,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const building = context.building()
             const buildingRegionKey = building.region().name()
             const charactersInThatRegion = WrapICharacterObjectListToCharacterArray(building.faction().character_list())
-            const trait = "wh_dlc07_trait_brt_knights_vow_order_pledge_agent"
+            const trait = ORDER_PLEDGE_TRAIT
 
             for (const char of charactersInThatRegion) {
                 //ogre only
@@ -151,24 +245,21 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         //MUST be in army
         private static AddPledgeToDestroy(context: IContext) {
+            print(`i was called ${debug.traceback()}`)
+
             if(context.character == null) return
-            if(context.faction == null) return
             if(context.garrison_residence == null) return
 
             const character = WrapICharacterObjectToCharacter(context.character())
-            const faction = WrapIFactionScriptToFaction(context.faction())
             const garrisonResidence = context.garrison_residence()
-            //ogre only
-            if(!OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) return
 
-
-            if(faction == null) return
+            const faction = character.Faction
 
             if(!faction.IsHuman) return
             if(faction.Culture != "wh_main_brt_bretonnia") return
             if(!garrisonResidence.region().is_province_capital()) return
             if(!character.IsInMilitaryForce) return
-            const trait = "wh_dlc07_trait_brt_grail_vow_destroy_pledge"
+            const trait = DESTROY_PLEDGE_TRAIT
             OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(character.GetInternalInterface().military_force(), trait)
         }
 
@@ -191,7 +282,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
             const climate = character.GetInternalInterface().region().settlement().get_climate()
             if(climate == "climate_desert" || climate == "climate_jungle") {
-                const trait = "wh_dlc07_trait_brt_questing_vow_campaign_pledge"
+                const trait = CAMPAIGN_PLEDGE_TRAIT
                 OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(character.GetInternalInterface().military_force(), trait)
             }
 
@@ -206,7 +297,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             if(!character.Faction.IsHuman) return
             if(character.Faction.Culture != "wh_main_brt_bretonnia") return
             
-            const trait = "wh_dlc07_trait_brt_questing_vow_heroism_pledge"
+            const trait = HEROISM_PLEDGE_TRAIT
             if(!character.IsInMilitaryForce) return
             OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(character.GetInternalInterface().military_force(), trait)
 
@@ -227,7 +318,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(!defenderCharacter.IsValid()) return
                 if(defenderCharacter.Faction.Culture != "wh_main_brt_bretonnia") return
 
-                const trait = "wh_dlc07_trait_brt_grail_vow_valour_pledge"
+                const trait = VALOUR_PLEDGE_TRAIT                
                 OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(defenderCharacter.GetInternalInterface().military_force(), trait)
             }
 
@@ -271,7 +362,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(!attackerCharacther.IsValid()) return
                 if(attackerCharacther.Faction.Culture != "wh_main_brt_bretonnia") return
 
-                const trait = "wh_dlc07_trait_brt_grail_vow_valour_pledge"
+                const trait = VALOUR_PLEDGE_TRAIT
                 OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(attackerCharacther.GetInternalInterface().military_force(), trait)
             }
 
@@ -286,7 +377,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
                 const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
 
-                const trait = "wh_dlc07_trait_brt_grail_vow_valour_pledge"
+                const trait = VALOUR_PLEDGE_TRAIT
                 OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(attackerCharacther.GetInternalInterface().military_force(), trait)
             }
 
