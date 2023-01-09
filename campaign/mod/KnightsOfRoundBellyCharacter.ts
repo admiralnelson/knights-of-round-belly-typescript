@@ -12,12 +12,19 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         spawnAsAgent?: boolean
         setAsFactionLeader?: boolean
         regionKey?: string
+        suppressLog?: boolean
     }
     type CallbackLordCreated = { 
         (theLordHimself: Lord, reason?: "CreateFromKey" | "WrappingExistingObject"): void
     }
     type CallbackChampionCreated = { 
         (theChampionHimself: Champion, reason?: "CreateFromKey" | "WrappingExistingObject"): void
+    }
+
+    class TraitData {
+        traitKey: string = ""
+        traitLevel: number = 0
+        traitPoints: number = 0
     }
 
     /**
@@ -54,6 +61,35 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     /**
+     * Attempt to cast Character into a Champion
+     * @param character character to cast
+     * @returns A Champion or null if cast is failed
+     */
+    export function TryCastCharacterToChampion(character: Character): Champion | null {
+        if(!character.IsValid()) return null
+        try {
+            const ret = new Champion({characterObject: character.GetInternalInterface(), suppressLog: true})
+            return ret
+        } catch {            
+            return null
+        }
+    }
+
+    /**
+     * Attempt to cast Character into a Lord
+     * @param character A Lord or null if cast is failed
+     */
+    export function TryCastCharacterToLord(character: Character): Lord | null {
+        if(!character.IsValid()) return null
+        try {
+            const ret = new Lord({characterObject: character.GetInternalInterface(), suppressLog: true}) 
+            return ret
+        } catch {
+            return null
+        }
+    }
+
+    /**
      * ICharacterScript wrapper. It allows you to query and manipulate your lords and heroes in OOP style rather than relying cm APIs
      */
     export class Character {
@@ -76,24 +112,24 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(options.factionKey) {
                     const checkFaction = cm.model().world().faction_by_key(options.factionKey)
                     if(checkFaction.is_null_interface()) {
-                        CharacterLogger.LogError(`invalid faction key "${options.factionKey}"`)
+                        if(!options.suppressLog) CharacterLogger.LogError(`invalid faction key "${options.factionKey}"`)
                         throw(`invalid faction key "${options.factionKey}"`)
                     }
                 }
                 if(options.regionKey) {
                     const checkRegtion = cm.model().world().region_manager().region_by_key(options.regionKey)
                     if(checkRegtion.is_null_interface()) {
-                        CharacterLogger.LogError(`invalid region key "${options.regionKey}"`)
+                        if(!options.suppressLog) CharacterLogger.LogError(`invalid region key "${options.regionKey}"`)
                         throw(`invalid region key "${options.regionKey}"`)
                     }
                 }
 
                 if(options.regionKey == null) {
-                    CharacterLogger.LogError(`can't spawn lord/agent, options.factionKey was null`)
+                    if(!options.suppressLog) CharacterLogger.LogError(`can't spawn lord/agent, options.factionKey was null`)
                     throw(`can't spawn lord/agent, options.factionKey was null`)
                 }
                 if(options.factionKey == null) {
-                    CharacterLogger.LogError(`can't spawn lord/agent, options.factionKey was null`)
+                    if(!options.suppressLog) CharacterLogger.LogError(`can't spawn lord/agent, options.factionKey was null`)
                     throw(`can't spawn lord/agent, options.factionKey was null`)
                 }
 
@@ -125,7 +161,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 )
                 if(options.spawnAsAgent) {
                     if(options.agentType == null || options.agentType == "") {
-                        CharacterLogger.Log(`can't spawn agent, options.agentType was null`)
+                        if(!options.suppressLog) CharacterLogger.Log(`can't spawn agent, options.agentType was null`)
                         throw(`can't spawn agent, options.agentType was null`)
                     }
                     const theFaction = cm.model().world().faction_by_key(factionKey)
@@ -265,6 +301,21 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return WrapICharacterObjectListToCharacterArray(this.GetInternalInterface().military_force().character_list())
         }
         
+        /**
+         * (getter) gets all traits assigned to this character
+         */
+        public get Traits(): TraitData[] {
+            const traitKeys = this.GetInternalInterface().all_traits()
+            const result = []
+            for (const trait of traitKeys) {
+                const data = new TraitData
+                data.traitKey = trait
+                data.traitLevel = this.GetTraitLevel(trait)
+                data.traitPoints = this.GetTraitPoints(trait)
+                result.push(data)
+            }
+            return result
+        }
 
         /** Returns true if the character in military force */
         public get IsInMilitaryForce(): boolean {
@@ -374,6 +425,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         /**
+         * Gets trait point (the points thing that is next to skill node in character skill tree)
+         * @param traitKey trait key
+         * @returns 
+         */
+        public GetTraitPoints(traitKey: string): number {
+            return this.GetInternalInterface().trait_points(traitKey)
+        }
+
+        /**
          * Kills this character. WARNING: this can render methods of this object to be invalid!
          * @param destroyTroop destroy the troop too? (for general/lord only)
          */
@@ -411,7 +471,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         agentKey?: string,
         factionKey?: string,
         regionKey?: string,
-        lordCreatedCallback?: CallbackLordCreated
+        lordCreatedCallback?: CallbackLordCreated,
+        suppressLog?: boolean
     }
 
     /** Inherits from Character, you can extend this class if you want to have additional methods or maybe to differentiate between Lord type */
@@ -421,6 +482,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         /**
          * @param options to create Lord from scratch, following attribute `agentKey`, `factionKey`, `regionKey` must be supplied to `options`. `lordCreatedCallback` is a callback when character spawned successfully   
          * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`
+         * @throws if the character is not a "general type", or the cqi inputted was invalid
          */
         constructor(options?: LordCreationOptions) {
             if(options == null) return
@@ -442,11 +504,26 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     false
                 )
             }
-            if(options.cqi) {
+            if(options.characterObject) {
+                super({})
+                this.characterObj = options.characterObject
+                if(!cm.char_is_general(this.characterObj)) {
+                    if(!options.suppressLog) CharacterLogger.LogError(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
+                    throw(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
+                }
+            }
+            else if(options.cqi) {
                 super({})
                 const theChar = cm.get_character_by_cqi(options.cqi)
-                if(theChar) this.characterObj = theChar; else {
-                    CharacterLogger.LogError(`this cqi ${options.cqi} is invalid cqi`)
+                if(theChar) {                    
+                    this.characterObj = theChar
+                    if(!cm.char_is_general(this.characterObj)) {
+                        if(!options.suppressLog) CharacterLogger.LogError(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
+                        throw(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
+                    }
+                }
+                else {
+                    if(!options.suppressLog) CharacterLogger.LogError(`this cqi ${options.cqi} is invalid cqi`)
                     throw(`this cqi ${options.cqi} is invalid cqi`)
                 }
 
@@ -492,7 +569,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         factionKey?: string,
         regionKey?: string,
         agentType?: string
-        championCreatedCallback?: CallbackChampionCreated
+        championCreatedCallback?: CallbackChampionCreated,
+        suppressLog?: boolean
     }
     /** Inherits from Character, you can extend this class if you want to have additional methods or maybe to differentiate between agent type */
     export class Champion extends Character {
@@ -501,6 +579,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         /**
          * @param options to create Champion from scratch, following attribute `agentKey`, `factionKey`, `regionKey`, `agentType` must be supplied to `options`. `championCreatedCallback` is a callback when character spawned successfully   
          * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`
+         * @throws if the cqi is invalid, if the supplied characterObject is not an agent, or agentType is not supplied when spawning an agent
          */
         constructor(options?: ChampionCreationOptions) {
             if(options == null) return
@@ -522,17 +601,30 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     false
                 )
             }
-            if(options.cqi) {
+            if(options.characterObject) {
+                super({})
+                this.characterObj = options.characterObject
+                if(!cm.char_is_agent(this.characterObj)) {
+                    if(options.suppressLog) CharacterLogger.Log(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
+                    throw(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
+                }
+            }
+            else if(options.cqi) {
                 super({})
                 const theChar = cm.get_character_by_cqi(options.cqi)
-                if(theChar) this.characterObj = theChar; else {
-                    CharacterLogger.LogError(`this cqi ${options.cqi} is invalid cqi`)
+                if(theChar) {
+                    this.characterObj = theChar 
+                    if(!cm.char_is_agent(this.characterObj)) {
+                        if(options.suppressLog) CharacterLogger.Log(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
+                        throw(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
+                    }
+                }else {
+                    if(options.suppressLog) CharacterLogger.LogError(`this cqi ${options.cqi} is invalid cqi`)
                     throw(`this cqi ${options.cqi} is invalid cqi`)
                 }
-
             } else {
                 if(options.agentType == null || options.agentType == "") {
-                    CharacterLogger.Log(`cannot create new champion because you didn't pass options.agentType. options.agentKey ${options.agentKey}`)
+                    if(options.suppressLog) CharacterLogger.Log(`cannot create new champion because you didn't pass options.agentType. options.agentKey ${options.agentKey}`)
                     throw(`cannot create new champion because you didn't pass options.agentType. options.agentKey ${options.agentKey}`)
                 }
                 super({
