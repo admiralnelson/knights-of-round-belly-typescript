@@ -5,7 +5,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     type CharacterCreationOptions = {
         characterObject?: ICharacterScript
         factionKey?: string
-        agentSubtypeKey?: string,
+        agentSubtypeKey?: string
         forename?: string
         familyName?: string
         agentType?: string
@@ -13,6 +13,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         setAsFactionLeader?: boolean
         regionKey?: string
         suppressLog?: boolean
+        onFailed?: VoidCallback
     }
     type CallbackLordCreated = { 
         (theLordHimself: Lord, reason?: "CreateFromKey" | "WrappingExistingObject"): void
@@ -100,7 +101,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          * Or use `Lord` or `Champion` class instead.
          * @param options To wrap existing `ICharacterScript` object fill `option.characterObject`. 
          * To create new Character for general/lord from scratch, fill these fields: `option.agentSubtypeKey`, `options.factionKey`, `options.regionKey`
-         * To spawn agent, fill the same fields as above and fill these too `options.spawnAsAgent`, `options.agentType`
+         * To spawn agent, fill the same fields as above and fill these too `options.spawnAsAgent`, `options.agentType`  
+         * `onFailed` will be called if failed to spawn  (only when creating/spawning Agent from agentkey)  
          * @returns Wrapped ICharacterScript inside Character
          */
         constructor(options: CharacterCreationOptions) {
@@ -138,8 +140,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 //check if lord successfully spawned, otherwise tell an error
                 const traceback = debug.traceback("", 2)
                 const throwErrorLatent = setTimeout(()=> {
-                    CharacterLogger.LogError(`failed to spawn character ${options.agentSubtypeKey}`)
+                    CharacterLogger.LogError(`failed to spawn character ${options.agentSubtypeKey}`, false)
                     CharacterLogger.LogWarn(`previous tracebacks: \n${traceback}`)
+                    if(options.onFailed) options.onFailed()
                 }, 200)
                 //if the character did spawn make sure to store it into internal variable this.characterObj
                 core.add_listener(
@@ -472,7 +475,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         factionKey?: string,
         regionKey?: string,
         lordCreatedCallback?: CallbackLordCreated,
-        suppressLog?: boolean
+        suppressLog?: boolean,
+        onFailed?: VoidCallback
     }
 
     /** Inherits from Character, you can extend this class if you want to have additional methods or maybe to differentiate between Lord type */
@@ -481,7 +485,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         /**
          * @param options to create Lord from scratch, following attribute `agentKey`, `factionKey`, `regionKey` must be supplied to `options`. `lordCreatedCallback` is a callback when character spawned successfully   
-         * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`
+         * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`  
+         * `onFailed` will be called if failed to spawn (only when creating/spawning Lord from agentkey)  
          * @throws if the character is not a "general type", or the cqi inputted was invalid
          */
         constructor(options?: LordCreationOptions) {
@@ -532,7 +537,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     characterObject: options.characterObject, 
                     factionKey: options.factionKey,
                     regionKey: options.regionKey,
-                    agentSubtypeKey: options.agentKey 
+                    agentSubtypeKey: options.agentKey,
+                    onFailed: options.onFailed
                 })
             }
             this.lordCreatedCallback = options.lordCreatedCallback
@@ -570,7 +576,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         regionKey?: string,
         agentType?: string
         championCreatedCallback?: CallbackChampionCreated,
-        suppressLog?: boolean
+        suppressLog?: boolean,
+        onFailed?: VoidCallback
     }
     /** Inherits from Character, you can extend this class if you want to have additional methods or maybe to differentiate between agent type */
     export class Champion extends Character {
@@ -578,7 +585,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         /**
          * @param options to create Champion from scratch, following attribute `agentKey`, `factionKey`, `regionKey`, `agentType` must be supplied to `options`. `championCreatedCallback` is a callback when character spawned successfully   
-         * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`
+         * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`   
+         * `onFailed` will be called if failed to spawn (only when creating/spawning Champion from agentkey)  
          * @throws if the cqi is invalid, if the supplied characterObject is not an agent, or agentType is not supplied when spawning an agent
          */
         constructor(options?: ChampionCreationOptions) {
@@ -633,7 +641,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     regionKey: options.regionKey,
                     agentSubtypeKey: options.agentKey,
                     agentType: options.agentType,
-                    spawnAsAgent: true 
+                    spawnAsAgent: true,
+                    onFailed: options.onFailed
                 })
             }
             this.championCreatedCallback = options.championCreatedCallback
