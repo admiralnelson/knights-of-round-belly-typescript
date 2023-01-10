@@ -12,10 +12,27 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     export const DUKE_LOUIS_AGENT_KEY = "admnelson_bret_ogre_louis_le_gros_agent_key"
     export const HECTOR_AGENT_KEY = "admnelson_bret_ogre_hector_de_maris_agent_key"
     export const CLAUDIN_AGENT_KEY = "admnelson_bret_ogre_claudin_agent_key"
+    export const GARRAVAIN_AGENT_KEY = "admnelson_bret_ogre_garravain_d_estrangot_agent_key"
+    export const YVAIN_LE_BATARD_AGENT_KEY = "admnelson_bret_ogre_yvain_le_batard_agent_key"
+    export const LUCANT_AGENT_KEY = "admnelson_bret_ogre_lucant_le_boutellier_agent_key"
+    export const GORNEMANT_AGENT_KEY = "admnelson_bret_ogre_gornemant_de_goort_agent_key"
+
+    const OGRE_CHAMPIONS_KEYS = [
+        HECTOR_AGENT_KEY, 
+        CLAUDIN_AGENT_KEY, 
+        GARRAVAIN_AGENT_KEY, 
+        YVAIN_LE_BATARD_AGENT_KEY,
+        LUCANT_AGENT_KEY,
+        GORNEMANT_AGENT_KEY
+    ]
 
     export const DUKE_LOUIS_FORENAME = "names_name_11382017"; export const DUKE_LOUIS_TITLE = "names_name_11382018"
     export const HECTOR_FORENAME = "names_name_11382022"; export const HECTOR_HOUSE_OF = "names_name_11382023"
-    export const CLAUDIN_FORENAME = "names_name_11382019"; export const CLAUDIN_HOUSE_OF = "names_name_11382020"
+    export const CLAUDIN_FORENAME = "names_name_11382019"; export const CLAUDIN_HOUSE_OF = ""
+    export const GARRAVAIN_FORENAME = "names_name_11382020"; export const GARRAVAIN_HOUSE_OF = "names_name_11382021"
+    export const YVAIN_FORENAME = "names_name_11382024"; export const YVAIN_HOUSE_OF = "names_name_11382025"
+    export const LUCANT_FORENAME = "names_name_11382028"; export const LUCANT_HOUSE_OF = "names_name_11382029"
+    export const GORENMANT_FORENAME = "names_name_11382026"; export const GORNEMENT_HOUSE_OF = "names_name_11382027"
     
     const CIVILISED_SKILL_KEY     = "admiralnelson_ogre_civilised_characther_skills_1_skill_key"
     const OGRE_SKILL_KEY          = "admiralnelson_ogre_being_is_generally_unchivalrous_and_savage_skills_key_background_skill_scripted"
@@ -24,6 +41,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     
     export const PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_not_commited_yet_scripted_trait_key"
     export const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
+
 
     export class KnightsOfTheRoundBelly {
         
@@ -305,10 +323,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOnFactionTurnStart()
             this.SetupOnFactionTurnEnd()
             this.SetupTestTimer()
-            this.SetupOnCharacterLevelPaneDisableLouisMount()            
-
-            OgrePaladinVowHandler.AllowedOgreAgentKeys.add(HECTOR_AGENT_KEY)
-            OgrePaladinVowHandler.Init()
+            this.SetupOnCharacterLevelPaneDisableLouisMount()        
+            this.SetupOgreVowHandler()    
 
             /** START TEST SUITE */
             if(this.FindAllOgres().length == 0 && DEBUG) {
@@ -518,6 +534,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             )
             
             this.l.Log(`SetupOnCharacterLevelPaneDisableLouisMount ok`)
+        }
+
+        SetupOgreVowHandler(): void {
+            for (const key of OGRE_CHAMPIONS_KEYS) {                
+                OgrePaladinVowHandler.AllowedOgreAgentKeys.add(key)
+            }
+            
+            OgrePaladinVowHandler.Init()
+            this.l.Log(`SetupOgreVowHandler ok`)
         }
         
 

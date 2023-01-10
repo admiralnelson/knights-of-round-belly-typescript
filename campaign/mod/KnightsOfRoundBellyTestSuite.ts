@@ -56,7 +56,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
     function SpawnClaudin(objectToTest: KnightsOfTheRoundBelly): boolean {
         if(objectToTest.DesignatedFaction == null) {
-            pError(`SpawnHectorTest - this.designatedFaction is null`)
+            pError(`SpawnClaudin - this.designatedFaction is null`)
             return false
         }
         const factionKey = objectToTest.DesignatedFaction.FactionKey
@@ -75,6 +75,96 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         pWarn(`SpawnClaudin Ok`)
         return true
     }
+
+    function SpawnGarravain(objectToTest: KnightsOfTheRoundBelly): boolean {
+        if(objectToTest.DesignatedFaction == null) {
+            pError(`SpawnGarravain - this.designatedFaction is null`)
+            return false
+        }
+        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        new Champion({
+            agentKey: GARRAVAIN_AGENT_KEY,
+            factionKey: factionKey,
+            regionKey: "wh3_main_combi_region_couronne",
+            agentType: "champion",
+            championCreatedCallback: (champion, reason) => {
+                champion.RenameLocalised(GARRAVAIN_FORENAME, GARRAVAIN_HOUSE_OF)
+                champion.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+                setTimeout(() => objectToTest.CalculatePeasantSlotsUsageAndApplyPenalties(), 500);
+            }
+        })
+
+        pWarn(`SpawnGarravain Ok`)
+        return true
+    }
+
+    function SpawnYvain(objectToTest: KnightsOfTheRoundBelly): boolean {
+        if(objectToTest.DesignatedFaction == null) {
+            pError(`SpawnYvain - this.designatedFaction is null`)
+            return false
+        }
+        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        new Champion({
+            agentKey: YVAIN_LE_BATARD_AGENT_KEY,
+            factionKey: factionKey,
+            regionKey: "wh3_main_combi_region_couronne",
+            agentType: "champion",
+            championCreatedCallback: (champion, reason) => {
+                champion.RenameLocalised(YVAIN_FORENAME, YVAIN_HOUSE_OF)
+                champion.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+                setTimeout(() => objectToTest.CalculatePeasantSlotsUsageAndApplyPenalties(), 500);
+            }
+        })
+
+        pWarn(`SpawnYvain Ok`)
+        return true
+    }
+
+    function SpawnLucant(objectToTest: KnightsOfTheRoundBelly): boolean {
+        if(objectToTest.DesignatedFaction == null) {
+            pError(`SpawnLucant - this.designatedFaction is null`)
+            return false
+        }
+        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        new Champion({
+            agentKey: LUCANT_AGENT_KEY,
+            factionKey: factionKey,
+            regionKey: "wh3_main_combi_region_couronne",
+            agentType: "champion",
+            championCreatedCallback: (champion, reason) => {
+                champion.RenameLocalised(LUCANT_FORENAME, LUCANT_HOUSE_OF)
+                champion.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+                setTimeout(() => objectToTest.CalculatePeasantSlotsUsageAndApplyPenalties(), 500);
+            }
+        })
+
+        pWarn(`SpawnYvain Ok`)
+        return true
+    }
+
+    function SpawnGornemant(objectToTest: KnightsOfTheRoundBelly): boolean {
+        if(objectToTest.DesignatedFaction == null) {
+            pError(`SpawnGornemant - this.designatedFaction is null`)
+            return false
+        }
+        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        new Champion({
+            agentKey: GORNEMANT_AGENT_KEY,
+            factionKey: factionKey,
+            regionKey: "wh3_main_combi_region_couronne",
+            agentType: "champion",
+            championCreatedCallback: (champion, reason) => {
+                champion.RenameLocalised(GORENMANT_FORENAME, GORNEMENT_HOUSE_OF)
+                champion.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+                setTimeout(() => objectToTest.CalculatePeasantSlotsUsageAndApplyPenalties(), 500);
+            }
+        })
+
+        pWarn(`SpawnGornemant Ok`)
+        return true
+    }
+
+
 
     function SpawnEnemyTest(objectToTest: KnightsOfTheRoundBelly): boolean {
         for (let i = 0; i < 5; i++) {
@@ -145,8 +235,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         const ret = 
             SpawnDukeLouisTest(objectToTest) && 
             SpawnHectorTest(objectToTest) &&
-            SpawnEnemyTest(objectToTest) &&
             SpawnClaudin(objectToTest) &&
+            SpawnGarravain(objectToTest) &&
+            SpawnYvain(objectToTest) &&
+            SpawnLucant(objectToTest) &&
+            SpawnGornemant(objectToTest) &&
+            //SpawnEnemyTest(objectToTest) &&
             PrintAllTraits(objectToTest) 
 
         print(`result: `)
