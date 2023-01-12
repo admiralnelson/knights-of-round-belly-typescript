@@ -89,6 +89,7 @@ interface IWorldScript extends INullScript {
 }
 
 interface IModelScript extends INullScript {
+    pending_battle(): IPendingBattleScript
     can_reach_character(who: ICharacterScript, againstWho: ICharacterScript): boolean
     can_reach_settlement(who: ICharacterScript, where: ISettlementScript): boolean
     can_reach_position(who: ICharacterScript, x: number, y: number): boolean
@@ -105,8 +106,13 @@ interface IRegionDataListScript extends INullScript {
 }
 
 interface IUnitListScript extends IListScript {
-    has_unit(unitKey: string): string
+    has_unit(unitKey: string): boolean
     item_at(index: number): IUnitScript
+    is_empty(): boolean    
+}
+
+interface IUnitPurchaseableEffectListScript extends IListScript {
+
 }
 
 interface ICharacterListScript extends IListScript {
@@ -402,7 +408,55 @@ interface IRegionDataScript extends INullScript {
 }
 
 interface IUnitScript extends INullScript {
-
+    /** Command queue index of the unit */
+    command_queue_index(): number
+    /** Is the unit in a force with a commander? */
+    has_force_commander(): boolean
+    /** Does this unit have a character leading it? Not all units have one */
+    has_unit_commander(): boolean
+    /** Is this a land unit? */
+    is_land_unit(): boolean
+    /** Is this a naval unit? */
+    is_naval_unit(): boolean
+    /** Access to the campaign model interface */
+    model(): IModelScript
+    /** Returns the force commander if one exists, returns INullScript if it doesn't */
+    force_commander(): ICharacterScript
+    /** Returns the unit commander if one exists, returns INullScript if it doesn't */
+    unit_commander(): ICharacterScript
+    /** Returns the military force containing this unit */
+    military_force(): IMilitaryForceScript
+    /** Returns the faction that this unit belongs to */
+    faction(): IFactionScript
+    /**  The unit record key (main unit key) */
+    unit_key(): string
+    /** The unit record category */
+    unit_category(): string
+    /** The unit record class */
+    unit_class(): string
+    /** The % of soldiers in the unit. Returns a value 0.0-100.0 */
+    percentage_proportion_of_full_strength(): number
+    /** Returns whether the unit has a banner equipped */
+    has_banner_ancillary(): boolean
+    /** Returns the ancillary key of the banner equipped by the unit, or an empty string if no banner is equipped */
+    banner_ancillary(): string
+    /** Get the experience level of this unit, which is the number of chevrons it has */
+    experience_level(): number
+    /**  Can this unit upgrade its equipment */
+    can_upgrade_unit_equipment(): boolean
+    /** Can this unit be upgraded to another unit  */
+    can_upgrade_unit(): boolean
+    /** Get the cost of the unit in multiplayer or custom battle mode */
+    get_unit_custom_battle_cost(): number
+    /**  Can the specified purchase happen */
+    can_purchase_effect(factionKey: string, effectKey: string): boolean
+    /**  Can the specified unpurchase happen */
+    can_unpurchase_effect(effectKey: string): boolean
+    /** Get the list of unit purchasable effects linked to this unit */
+    get_unit_purchasable_effects(): IUnitPurchaseableEffectListScript
+    /** Get the list of purchasable effects purchased for the unit */
+    get_unit_purchased_effects(): IUnitPurchaseableEffectListScript
+    
 }
 
 interface IMilitaryForceTypeScript extends INullScript {
@@ -590,7 +644,7 @@ interface IPooledResourceManager extends INullScript {
 
 interface IFactionScript extends INullScript {
     command_queue_index(): number
-    region_list(): IRegionDataListScript
+    region_list(): IRegionListScript
     character_list(): ICharacterListScript
     military_force_list(): IMilitaryForceListScript
     model(): IModelScript
@@ -1045,22 +1099,303 @@ This function can also reposition the camera, so it's best used on game creation
      * @character character
      */
     char_is_general_with_army(character: ICharacterScript): boolean
+
+    /**
+     * Returns true if the supplied character is not a general, a colonel or a minister, false otherwise.
+     * @param character character
+     */
+    char_is_agent(character: ICharacterScript): boolean
+
+    /**
+     * Returns true if the supplied character is of type 'general', false otherwise.
+     * @param character 
+     */
+    char_is_general(character: ICharacterScript): boolean
+
+    /**
+     * Triggers dilemma with a specified key, based on a record from the database, preferentially wrapped in an intervention.   
+     * The delivery of the dilemma will be wrapped in an intervention in singleplayer mode, whereas in multiplayer mode the dilemma is triggered directly.   
+     * It is preferred to use this function to trigger a dilemma, unless the calling script is running from within an intervention in which case `cm.trigger_dilemma_raw` should be used.
+     * @param factionKey Faction key, from the factions table.
+     * @param dillemaKey Dilemma key, from the dilemmas table.
+     * @param triggerCallback Callback to call when the intervention actually gets triggered. (default is null)
+     * @returns Dilemma triggered successfully. true is always returned if an intervention is generated.
+     */
+    trigger_dilemma(factionKey: string, dillemaKey: string, triggerCallback?: VoidCallback): boolean
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
 interface IContext {
-    /** gets faction interface, could be INullScript */
+    /** 
+     * This function is available for this following events:  
+     * 
+     * - DilemmaChoiceMadeEvent
+     * - FactionAboutToEndTurn  
+     * - FactionBecomesActiveHuman  
+     * - FactionBecomesIdleHuman  
+     * - FactionBecomesLiberationVassal  
+     * - FactionBeginTurnPhaseNormal  
+     * - FactionCivilWarOccured  
+     * - FactionCookedDish  
+     * - FactionEvent  
+     * - FactionJoinsConfederation    
+     * - FactionRoundStart  
+     * - FactionSubjugatesOtherFaction  
+     * - FactionTurnEnd  
+     * - FactionTurnStart  
+     * - ImprisonmentEvent  
+     * - ImprisonmentRejectionEvent  
+     * - IncidentEvent  
+     * - IncidentFailedEvent  
+     * - IncidentOccuredEvent  
+     * - MilitaryForceInfectionEvent  
+     * - MissionCancelled  
+     * - MissionEvent  
+     * - MissionFailed  
+     * - MissionIssued  
+     * - MissionNearingExpiry  
+     * - MissionStatusEvent  
+     * - MissionSucceeded  
+     * - PendingBankruptcy  
+     * - PooledResourceChanged  
+     * - PooledResourceEffectChangedEvent  
+     * - PooledResourceEvent  
+     * - PrisonActionTakenEvent  
+     * - QueryShouldWaylayCaravan  
+     * - RecruitmentItemIssuedByPlayer  
+     * - RegionInfectionEvent  
+     * - ResearchCompleted  
+     * - ResearchStarted  
+     * - TradeRouteEstablished  
+     * - WarCoordinationRequestIssued  
+     * - WoMCompassUserActionTriggeredEvent  
+     * - WoMCompassUserDirectionSelectedEvent  
+     */
     faction?() : IFactionScript
+    /**
+     * This function is available for this following events:  
+     * 
+     * - CampaignArmiesMerge  
+     * - CampaignCoastalAssaultOnCharacter
+     * - CampaignCoastalAssaultOnGarrison
+     * - CharacterArmoryItemUnlocked
+     * - CharacterAttacksAlly
+     * - CharacterBecomesFactionLeader
+     * - CharacterBlockadedPort
+     * - CharacterBrokePortBlockade
+     * - CharacterCanLiberate
+     * - CharacterCandidateBecomesMinister
+     * - CharacterCapturedSettlementUnopposed
+     * - CharacterCharacterTargetAction
+     * - CharacterComesOfAge
+     * - CharacterCompletedBattle
+     * - CharacterConvalescedOrKilled
+     * - CharacterCreated
+     * - CharacterDiscovered
+     * - CharacterDisembarksNavy
+     * - CharacterEmbarksNavy
+     * - CharacterEntersAttritionalArea
+     * - CharacterEntersGarrison
+     * - CharacterEvent
+     * - CharacterFactionCompletesResearch
+     * - CharacterGarrisonTargetAction
+     * - CharacterGarrisonTargetEvent
+     * - CharacterInfoPanelOpened
+     * - CharacterLeavesGarrison
+     * - CharacterLootedSettlement
+     * - CharacterMarriage
+     * - CharacterParticipatedAsSecondaryGeneralInBattle
+     * - CharacterPerformsActionAgainstFriendlyTarget
+     * - CharacterPerformsSettlementOccupationDecision
+     * - CharacterPerformsSettlementOccupationDecision
+     * - CharacterPostBattleEnslave
+     * - CharacterPostBattleRelease
+     * - CharacterPostBattleSlaughter
+     * - CharacterPromoted
+     * - CharacterRankUp
+     * - CharacterRankUpNeedsAncillary
+     * - CharacterRazedSettlement
+     * - CharacterRecruited
+     * - CharacterRelativeKilled
+     * - CharacterSackedSettlement
+     * - CharacterSelected
+     * - CharacterSkillPointAvailable
+     * - CharacterTargetEvent
+     * - CharacterTurnEnd
+     * - CharacterTurnStart
+     * - CharacterWaaaghOccurred
+     * - CharacterWithdrewFromBattle
+     * - FactionLeaderDeclaresWar
+     * - FactionLeaderSignsPeaceTreaty
+     * - GarrisonAttackedEvent
+     * - GarrisonOccupiedEvent
+     * - HaveCharacterWithinRangeOfPositionMissionEvaluationResultEvent
+     * - LandTradeRouteRaided
+     * - MovementPointsExhausted
+     * - MultiTurnMove
+     * - ScriptedCharacterUnhidden
+     * - ScriptedCharacterUnhiddenFailed
+     * - SeaTradeRouteRaided
+     * - SpawnableForceCreatedEvent
+     * - TeleportationNetworkCharacterNodeClosureHandedOver
+     * - TeleportationNetworkMoveCompleted
+     * - TeleportationNetworkMoveStart
+     * - TradeNodeConnected
+     */
     character?(): ICharacterScript
+    /** This function is available for this following events:  
+     * 
+     * - NewCharacterEnteredRecruitmentPool 
+     */
     character_details?(): ICharacterDetailsScript
     string?: string
+     /** This function is available for this following events:  
+     * 
+     * - CharacterSkillPointAllocated 
+     */
     skill_point_spent_on?(): string
+    /** This function is available for this following events:  
+     * 
+     * - CharacterCharacterTargetAction
+     * - CharacterGarrisonTargetAction 
+     */
     mission_result_critial_success?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - CharacterCharacterTargetAction
+     * - CharacterGarrisonTargetAction 
+     */
     mission_result_success?(): boolean
+    /**
+     * This function is available for this following events:  
+     * 
+     * - CharacterRankUp
+     */
     ranks_gained?(): number
+    /**
+     * This function is available for this following events:  
+     * 
+     * - BuildingCompleted
+     * - BuildingConstructionIssuedByPlayer
+     * - ForeignSlotBuildingCompleteEvent
+     * - ForeignSlotBuildingDamagedEvent
+     * - MilitaryForceBuildingCompleteEvent
+     * - RegionAbandonedWithBuildingEvent
+     */
     building?(): IBuildingScript
+    /**
+     * This function is available for this following events:  
+     * 
+     * - BuildingCancelled
+     * - BuildingCompleted
+     * - BuildingConstructionIssuedByPlayer
+     * - CampaignBuildingDamaged
+     * - CampaignCoastalAssaultOnGarrison
+     * - CharacterBlockadedPort
+     * - CharacterCapturedSettlementUnopposed
+     * - CharacterEntersGarrison
+     * - CharacterGarrisonTargetAction
+     * - CharacterGarrisonTargetEvent
+     * - CharacterLeavesGarrison
+     * - CharacterLootedSettlement
+     * - CharacterPerformsSettlementOccupationDecision
+     * - CharacterRazedSettlement
+     * - CharacterSackedSettlement
+     * - GarrisonAttackedEvent
+     * - GarrisonOccupiedEvent
+     * - GarrisonResidenceEvent
+     * - GarrisonResidenceExposedToFaction
+     * - SettlementSelected
+     * 
+     */
     garrison_residence?(): IGarrisonResidenceScript
     pending_battle?(): IPendingBattleScript
+    dilemma?(): string
+    /** This function is available for this following events:  
+     * 
+     * - DilemmaChoiceMadeEvent
+     */
+    choice?(): number
+    /** This function is available for this following events:  
+     * 
+     * - DilemmaChoiceMadeEvent 
+     */
+    choice_key?(): string
+    /** This function is available for this following events:  
+     * 
+     * - DilemmaChoiceMadeEvent 
+     */
+    campaign_model?(): IModelScript
+    /** This function is available for this following events:  
+     * 
+     * - DilemmaChoiceMadeEvent 
+     */
+    dilemma?(): string
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    proposer?(): IFactionScript
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    recipient?(): IFactionScript
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_alliance?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_military_alliance?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_defensive_alliance?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_peace_treaty?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_military_access?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_trade_agreement?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_non_aggression_pact?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_vassalage?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    proposer_is_vassal?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    is_state_gift?(): boolean
+    /** This function is available for this following events:  
+     * 
+     * - PositiveDiplomaticEvent 
+     */
+    state_gift_amount?(): number
 }
 
 interface IRealTimer {
@@ -1070,6 +1405,10 @@ interface IRealTimer {
     register_repeating(this: void, name: string, delayInMs: number): void
     /** it's recommended to use setInterval or setTimeout instead */
     register_singleshot(this: void, name: string, delayInMs: number): void
+}
+
+type VoidCallback = {
+    (): void
 }
 
 type ConditionalTest = {
