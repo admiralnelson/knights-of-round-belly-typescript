@@ -103,10 +103,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          * To create new Character for general/lord from scratch, fill these fields: `option.agentSubtypeKey`, `options.factionKey`, `options.regionKey`
          * To spawn agent, fill the same fields as above and fill these too `options.spawnAsAgent`, `options.agentType`  
          * `onFailed` will be called if failed to spawn  (only when creating/spawning Agent from agentkey)  
+         * @throws if characterObject is a INullScript
          * @returns Wrapped ICharacterScript inside Character
          */
         constructor(options: CharacterCreationOptions) {
             if(options.characterObject) {
+                if(options.characterObject.is_null_interface()) {
+                    if(!options.suppressLog) CharacterLogger.LogError(`options.characterObject is a INullScript!`)
+                    throw(`options.characterObject is a INullScript!`)
+                }
                 this.characterObj = options.characterObject
                 return
             }
@@ -479,6 +484,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         onFailed?: VoidCallback
     }
 
+    type Troop = {
+        unitKey: string,
+        health: number,
+        experience: number,
+        bannerAncillaryKey: string,
+        unitCategory: string,
+        unitClass: string,
+    }
+
     /** Inherits from Character, you can extend this class if you want to have additional methods or maybe to differentiate between Lord type */
     export class Lord extends Character {
         private lordCreatedCallback: CallbackLordCreated | undefined = undefined
@@ -487,6 +501,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          * @param options to create Lord from scratch, following attribute `agentKey`, `factionKey`, `regionKey` must be supplied to `options`. `lordCreatedCallback` is a callback when character spawned successfully   
          * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`  
          * `onFailed` will be called if failed to spawn (only when creating/spawning Lord from agentkey)  
+         * @throws if characterObject is a INullScript
          * @throws if the character is not a "general type", or the cqi inputted was invalid
          */
         constructor(options?: LordCreationOptions) {
@@ -512,6 +527,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             if(options.characterObject) {
                 super({})
                 this.characterObj = options.characterObject
+                if(options.characterObject.is_null_interface()) {
+                    if(!options.suppressLog) CharacterLogger.LogError(`options.characterObject is a INullScript!`)
+                    throw(`options.characterObject is a INullScript!`)
+                }
                 if(!cm.char_is_general(this.characterObj)) {
                     if(!options.suppressLog) CharacterLogger.LogError(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
                     throw(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
@@ -559,6 +578,29 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         /**
+         * Returns troops associated with this lord
+         */
+        public get Troops(): Troop[] {
+            if(!this.IsGeneralAndHasArmy) return []
+            const forceInterface = this.GetInternalInterface().military_force()
+            const unitsList = forceInterface.unit_list()
+            const result = []
+            for (let i = 0; i < unitsList.num_items(); i++) {
+                const theTroop = unitsList.item_at(i)
+                result.push({
+                    unitKey: theTroop.unit_key(),
+                    health: theTroop.percentage_proportion_of_full_strength(),
+                    experience: theTroop.experience_level(),
+                    bannerAncillaryKey: theTroop.banner_ancillary(),
+                    unitCategory: theTroop.unit_category(),
+                    unitClass: theTroop.unit_class(),
+                })
+                
+            }
+            return result
+        }
+
+        /**
          * Kills this lord and his armies.  
          * WARNING: Methods of this object will be invalid!
          */
@@ -587,6 +629,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          * @param options to create Champion from scratch, following attribute `agentKey`, `factionKey`, `regionKey`, `agentType` must be supplied to `options`. `championCreatedCallback` is a callback when character spawned successfully   
          * if you want to wrap existing ICharacter object, fill either `characterObject` or `cqi` into `options`   
          * `onFailed` will be called if failed to spawn (only when creating/spawning Champion from agentkey)  
+         * @throws if characterObject is a INullScript
          * @throws if the cqi is invalid, if the supplied characterObject is not an agent, or agentType is not supplied when spawning an agent
          */
         constructor(options?: ChampionCreationOptions) {
@@ -612,6 +655,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             if(options.characterObject) {
                 super({})
                 this.characterObj = options.characterObject
+                if(options.characterObject.is_null_interface()) {
+                    if(!options.suppressLog) CharacterLogger.LogError(`options.characterObject is a INullScript!`)
+                    throw(`options.characterObject is a INullScript!`)
+                }
                 if(!cm.char_is_agent(this.characterObj)) {
                     if(options.suppressLog) CharacterLogger.Log(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
                     throw(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
