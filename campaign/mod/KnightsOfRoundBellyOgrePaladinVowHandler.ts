@@ -58,11 +58,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     const logger = new Logger("OgrePaladinVowHandler")
     const print = (x: string) => logger.Log(x)
 
-    type LinkedList = {
-        Data: string
-        Next?: LinkedList
-    }
-
     export class OgrePaladinVowHandler {
 
         static AllowedOgreAgentKeys : LuaSet<string> = new LuaSet<string>()
