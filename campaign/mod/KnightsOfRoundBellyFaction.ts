@@ -69,6 +69,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         /**
+         * Trigger a dillema associated with this faction
+         * @param dillemaKey Dilemma key, from the dilemmas table.
+         */
+        public TriggerDilemma(dillemaKey: string): boolean {
+            return cm.trigger_dilemma(this.FactionKey, dillemaKey)
+        }
+
+        /**
          * Check if this faction is human
          * @returns true if human
          */
