@@ -49,7 +49,49 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         return outString;
     }
+
+    /** Generates multiplayer safe random integer from [lowerbound, upperbound] 
+     * @param upperbound upperbound (inclusive)
+     * @param lowerbound lowerbound (inclusive)
+    */
+    export function RandomNumber(upperbound: number = 10, lowerbound: number = 1): number {
+        return cm.random_number(upperbound, lowerbound)
+    }
+
+    /** returns a single dice roll */
+    export function DiceRoll(numberOfSide: number): number {
+        return RandomNumber(numberOfSide, 1)
+    }
+
+    /** choose random element in an array  
+     * should be multiplayer safe
+     * @returns if array is empty, null is returned
+     */
+    export function ChooseRandom(array: any[]): any | null {
+        if(array.length == 0) return null
+        const index = RandomNumber(array.length - 1, 0)
+        return array[index]
+    }
     
+    /**
+     * Rolls a xDy dice. For example 2D5 > 10 (the threshold)? 
+     * @param threshold total points 
+     * @param numberOfSide number of side on a dice
+     * @param numberOfDice how many dices to be rolled
+     */
+    export function IsDiceRollSucess(threshold: number, numberOfDices: number, numberOfSide: number): boolean {
+        let result = 0
+        for (let i = 0; i < numberOfDices; i++) {
+            result += DiceRoll(numberOfSide)            
+        }
+        return result >= threshold
+    }
+
+    /** returns the current turn number */
+    export function GetTurnNumber(): number {
+        return cm.turn_number()
+    }
+
     class TimedCallback {
         private id = 0
         private interval = 0
