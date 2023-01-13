@@ -67,7 +67,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
      * should be multiplayer safe
      * @returns if array is empty, null is returned
      */
-    export function ChooseRandom(array: any[]): any | null {
+    export function ChooseRandom(array: unknown[]): unknown | null {
         if(array.length == 0) return null
         const index = RandomNumber(array.length - 1, 0)
         return array[index]
