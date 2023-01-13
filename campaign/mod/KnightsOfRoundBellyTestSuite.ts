@@ -7,17 +7,17 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     
 
     function SpawnDukeLouisTest(objectToTest: KnightsOfTheRoundBelly): boolean {
-        if(objectToTest.DesignatedFaction == null) {
+        if(OgreSpawner.DesignatedFaction == null) {
             pError(`SpawnDukeLouisTest - this.designatedFaction is null`)
             return false
         }
         new Lord({ 
-            factionKey: objectToTest.DesignatedFaction.FactionKey,
+            factionKey: OgreSpawner.DesignatedFaction.FactionKey,
             agentKey: DUKE_LOUIS_AGENT_KEY,
             regionKey: "wh3_main_combi_region_couronne",
             lordCreatedCallback: (lord) => {
-                if(objectToTest.DesignatedFaction == null) return
-                objectToTest.DesignatedFaction.TriggerMission(LOUIS_MISSION_KEY, true)
+                if(OgreSpawner.DesignatedFaction == null) return
+                OgreSpawner.DesignatedFaction.TriggerMission(LOUIS_MISSION_KEY, true)
                 lord.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
                 lord.RenameLocalised(DUKE_LOUIS_FORENAME, DUKE_LOUIS_TITLE)
                 setTimeout(() => objectToTest.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
@@ -34,11 +34,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     function SpawnHectorTest(objectToTest: KnightsOfTheRoundBelly): boolean {
-        if(objectToTest.DesignatedFaction == null) {
+        if(OgreSpawner.DesignatedFaction == null) {
             pError(`SpawnHectorTest - this.designatedFaction is null`)
             return false
         }
-        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        const factionKey = OgreSpawner.DesignatedFaction.FactionKey
         new Champion({
             agentKey: HECTOR_AGENT_KEY,
             factionKey: factionKey,
@@ -55,11 +55,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     function SpawnClaudin(objectToTest: KnightsOfTheRoundBelly): boolean {
-        if(objectToTest.DesignatedFaction == null) {
+        if(OgreSpawner.DesignatedFaction == null) {
             pError(`SpawnClaudin - this.designatedFaction is null`)
             return false
         }
-        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        const factionKey = OgreSpawner.DesignatedFaction.FactionKey
         new Champion({
             agentKey: CLAUDIN_AGENT_KEY,
             factionKey: factionKey,
@@ -77,11 +77,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     function SpawnGarravain(objectToTest: KnightsOfTheRoundBelly): boolean {
-        if(objectToTest.DesignatedFaction == null) {
+        if(OgreSpawner.DesignatedFaction == null) {
             pError(`SpawnGarravain - this.designatedFaction is null`)
             return false
         }
-        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        const factionKey = OgreSpawner.DesignatedFaction.FactionKey
         new Champion({
             agentKey: GARRAVAIN_AGENT_KEY,
             factionKey: factionKey,
@@ -99,11 +99,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     function SpawnYvain(objectToTest: KnightsOfTheRoundBelly): boolean {
-        if(objectToTest.DesignatedFaction == null) {
+        if(OgreSpawner.DesignatedFaction == null) {
             pError(`SpawnYvain - this.designatedFaction is null`)
             return false
         }
-        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        const factionKey = OgreSpawner.DesignatedFaction.FactionKey
         new Champion({
             agentKey: YVAIN_LE_BATARD_AGENT_KEY,
             factionKey: factionKey,
@@ -121,11 +121,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     function SpawnLucant(objectToTest: KnightsOfTheRoundBelly): boolean {
-        if(objectToTest.DesignatedFaction == null) {
+        if(OgreSpawner.DesignatedFaction == null) {
             pError(`SpawnLucant - this.designatedFaction is null`)
             return false
         }
-        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        const factionKey = OgreSpawner.DesignatedFaction.FactionKey
         new Champion({
             agentKey: LUCANT_AGENT_KEY,
             factionKey: factionKey,
@@ -143,11 +143,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     function SpawnGornemant(objectToTest: KnightsOfTheRoundBelly): boolean {
-        if(objectToTest.DesignatedFaction == null) {
+        if(OgreSpawner.DesignatedFaction == null) {
             pError(`SpawnGornemant - this.designatedFaction is null`)
             return false
         }
-        const factionKey = objectToTest.DesignatedFaction.FactionKey
+        const factionKey = OgreSpawner.DesignatedFaction.FactionKey
         new Champion({
             agentKey: GORNEMANT_AGENT_KEY,
             factionKey: factionKey,
@@ -182,11 +182,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
     
     function KillAllOgres(objectToTest: KnightsOfTheRoundBelly): boolean {
-        if(objectToTest.DesignatedFaction == null) {
+        if(OgreSpawner.DesignatedFaction == null) {
             pError(`KillAllOgres: cant execute this.designatedFaction is null`)
             return false
         }
-        const faction = objectToTest.DesignatedFaction
+        const faction = OgreSpawner.DesignatedFaction
         const lords = faction.Lords
 
         for (const lord of lords) {
@@ -207,9 +207,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
     function PrintAllTraits(objectToTest: KnightsOfTheRoundBelly): boolean {
         setTimeout(() => { 
-            if(objectToTest.DesignatedFaction == null) return
+            if(OgreSpawner.DesignatedFaction == null) return
 
-            const lords = objectToTest.DesignatedFaction.Characters
+            const lords = OgreSpawner.DesignatedFaction.Characters
             for (const lord of lords) {
                 pWarn(`${lord.LocalisedFullName} traits ---- `)
                 const traits = lord.Traits
@@ -217,7 +217,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     print(`${trait.traitKey} level ${trait.traitLevel} points ${trait.traitPoints}`)
                 }
             }
-            const champions = objectToTest.DesignatedFaction.Champions
+            const champions = OgreSpawner.DesignatedFaction.Champions
             for (const champion of champions) {
                 pWarn(`${champion.LocalisedFullName} traits ---- `)
                 const traits = champion.Traits

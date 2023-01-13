@@ -4,6 +4,25 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     const print = (x: string) => logger.Log(x)
     const wPrint = (x: string) => logger.LogWarn(x)
     
+    export type DilemmaKeyToRegion = {
+        dilemmaKey: string
+        regionKeys: string[]
+    }
+
+    export type OgreSpawnData = {
+        regionKeys: string[]
+        defaultDilemmaKey: string
+        canSpawnFromRegion: boolean
+        diceRollTreshold: number
+        specificDillemaKeys?: DilemmaKeyToRegion[]
+        foreName?: string
+        familyName?: string
+    }
+
+    export type AllowedFaction = {
+        factionKey: string,
+        priority: number
+    }
 
     type OgreSaveData = {
         spawnedOgreKeys: string[],
@@ -12,22 +31,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         version: string
     }
 
-    type OgreSpawnData = {
-        regionKeys: string[],
-        dillemaKey: string,
-        canSpawnFromRegion: boolean,
-        diceRollTreshold: number
-    }
-
-    type AllowedFaction = {
-        factionKey: string,
-        priority: number
-    }
-
+    const DEBUG_ALWAYS_SPAWN = true
     const VERSION = "1"
     const OGRE_SPAWNER_DATA = "ADMIRALNELSON_OGRE_SPAWNER_DATA"
-    const DICES = 6
-    const DICE_SIDES = 6
+    const DICES = (DEBUG_ALWAYS_SPAWN) ? 1 : 6
+    const DICE_SIDES = (DEBUG_ALWAYS_SPAWN) ? 1 : 6
 
     export class OgreSpawner {
 
@@ -119,10 +127,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }
 
             if(IsDiceRollSucess(4, 1, 6) && ogreLordKeys.length > 0) {
-                return [ChooseRandom(ogreLordKeys), true]
+                return [ChooseRandom(ogreLordKeys) as string, true]
             }
 
-            return [ChooseRandom(OgreChampionKeys), false]
+            return [ChooseRandom(OgreChampionKeys) as string, false]
         }
         
         private static IsThereAnyOgreThatCantSpawnFromRegion(): boolean {
@@ -135,6 +143,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return
             }
 
+            if(OgreSpawner.Data == null) {
+                logger.LogError(`OgreSpawner.Data was null`)
+                throw(`OgreSpawner.Data was null`)
+            }
+
             const regionList = OgreSpawner.designatedFaction.GetFactionInterface().region_list()
             const regions = []
             for (let i = 0; i < regionList.num_items(); i++) {
@@ -143,7 +156,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             
             const result = []
             for (const [key, ogre] of OgreSpawner.OgreChampionKey2Regions) {
-                const intersection = regions.filter(key => ogre.regionKeys.includes(key))
+                const intersection = regions.filter(key => 
+                    ogre.regionKeys.includes(key) && 
+                    OgreSpawner.Data &&
+                    !OgreSpawner.Data.spawnedOgreKeys.includes(key))
+                    
                 ogre.canSpawnFromRegion = ogre.regionKeys.length > intersection.length
                 if(!ogre.canSpawnFromRegion) result.push(key)
             }            
@@ -170,7 +187,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             
             const result = []
             for (const [key, ogre] of OgreSpawner.OgreLordKey2Regions) {
-                const intersection = regions.filter(key => ogre.regionKeys.includes(key) && !OgreSpawner.Data?.spawnedOgreKeys.includes(key))
+                const intersection = regions.filter(key => 
+                    ogre.regionKeys.includes(key) && 
+                    OgreSpawner.Data && 
+                    !OgreSpawner.Data.spawnedOgreKeys.includes(key))
+
                 ogre.canSpawnFromRegion = ogre.regionKeys.length > intersection.length
                 if(!ogre.canSpawnFromRegion) result.push(key)
             }            
@@ -191,6 +212,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             /* update ogre availbility */
             OgreSpawner.UpdateWhichOgreLordsCannotBeSpawnedFromSettlement()
             OgreSpawner.UpdateWhichOgreChampionsCannotBeSpawnedFromSettlement()
+            if(character.IsGeneralAndHasArmy) {
+                const data = OgreSpawner.OgreLordKey2Regions.get(character.SubtypeKey)
+                if(data) character.RenameLocalised(data.foreName ? data.foreName : "", data.familyName)
+            } else {
+                const data = OgreSpawner.OgreChampionKey2Regions.get(character.SubtypeKey)
+                if(data) character.RenameLocalised(data.foreName ? data.foreName : "", data.familyName)
+            }
 
 
             if(OgreSpawner.OnOgreSpawnEvent == null) return
@@ -423,8 +451,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return false
             }
 
+            let dilemmaKey = ogreSpawnData[1].defaultDilemmaKey
             const isOgreLord = ogreSpawnData[2]
-            OgreSpawner.QueueDillema(lord, ogreKey, ogreSpawnData[1].dillemaKey, isOgreLord)
+            if(ogreSpawnData[1].specificDillemaKeys != null) {
+                print(`specific dillemakeys was detected ${JSON.stringify(ogreSpawnData[1].specificDillemaKeys)}`)
+                const findTheKey = ogreSpawnData[1].specificDillemaKeys.find( (dilemmaKey2Region) => dilemmaKey2Region.regionKeys.includes(regionKey) )
+                dilemmaKey = (findTheKey) ? findTheKey.dilemmaKey : dilemmaKey
+            }
+
+            OgreSpawner.QueueDillema(lord, ogreKey, dilemmaKey, isOgreLord)
 
             return true
         }
@@ -467,6 +502,29 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }
             print(`SetupDesignatedFaction ok - current faction is ${OgreSpawner.designatedFaction.FactionKey}`)
             if(OgreSpawner.OnDesignatedFactionChangeSuccessEvent != null) OgreSpawner.OnDesignatedFactionChangeSuccessEvent(OgreSpawner.designatedFaction) 
+        }
+
+        private static SetupOnConfederation() {
+            core.add_listener(
+                "update ogre2settlement status on getting new settlement from confederated faction",
+                "FactionJoinsConfederation",
+                true,
+                (context) => {
+                    if(OgreSpawner.designatedFaction == null) return
+                    if(context.faction == null) return
+                    const faction = GetFactionByKey(context.faction().name())
+
+                    if(faction == null) return
+                    if(!faction.IsEqual(OgreSpawner.designatedFaction)) return
+
+                    setTimeout(() => {
+                       OgreSpawner.UpdateWhichOgreChampionsCannotBeSpawnedFromSettlement()
+                       OgreSpawner.UpdateWhichOgreLordsCannotBeSpawnedFromSettlement() 
+                    }, 500);
+                },
+            true)
+
+            print(`SetupOnConfederation ok`)
         }
 
         private static SetupOnDiplomaticEvent() {
@@ -534,6 +592,37 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             print(`SetupMonitorFactionHealth ok`)
         }
 
+        static get DesignatedFaction(): Faction | null {
+            return OgreSpawner.designatedFaction
+        }
+
+        static AddOgreLord(key: string, data: OgreSpawnData) {
+            if(OgreSpawner.bInited) {
+                logger.LogError(`already inited, cannot modify the data`)
+                return
+            }
+
+            OgreSpawner.OgreLordKey2Regions.set(key, data)
+        }
+
+        static AddOgreChampion(key: string, data: OgreSpawnData) {
+            if(OgreSpawner.bInited) {
+                logger.LogError(`already inited, cannot modify the data`)
+                return
+            }
+
+            OgreSpawner.OgreChampionKey2Regions.set(key, data)
+        }
+
+        static FindAllOgres(): Character[] {
+            if(OgreSpawner.designatedFaction == null) return []
+            
+            const faction = OgreSpawner.designatedFaction
+            const characters = OgreSpawner.designatedFaction.Characters
+            const res = characters.filter((character) => OgreSpawner.IsOgreSpawnedBefore(character.SubtypeKey))         
+            return res
+        }
+
         /** returns false if there's save data stored in the player save game */
         static InitialiseForTheFirstTime(allowedFactionsKeys: AllowedFaction[]): boolean {
             if(OgreSpawner.LoadData()) return false
@@ -547,7 +636,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             OgreSpawner.SetupDesignatedFaction()
 
             return true
-        }
+        }        
     
         static Init() {
             if(OgreSpawner.bInited) return
@@ -590,14 +679,18 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 logger.LogWarn(`OnDesignatedFactionChangeSuccess event is not hooked.`)
             }
 
-
             OgreSpawner.bInited = true
             print("ready")
 
-            OgreSpawner.SetupDesignatedFaction()
+            const designatedFaction = GetFactionByKey(OgreSpawner.Data.currentFactionKey)
+            if(designatedFaction == null) {
+                throw(`impossible!`)
+            }
+            OgreSpawner.designatedFaction = designatedFaction
 
             OgreSpawner.SetupMonitorFactionHealth()
             OgreSpawner.SetupOnDiplomaticEvent()
+            OgreSpawner.SetupOnConfederation()
             
             OgreSpawner.SetupBotSpawner()
 
