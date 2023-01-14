@@ -390,6 +390,32 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return
         }
 
+        static UnlockAllVows(character: Character) {
+            if(!this.IsKnightsVowOK(character)) {
+                const trait = CHIVALRY_PLEDGE_TRAIT
+                for (let i = 0; i < 7; i++) {
+                    character.AddTrait(trait, false)                    
+                }
+            }
+
+            if(!this.IsQuestingVowOK(character)) {
+                const trait = CAMPAIGN_PLEDGE_TRAIT
+                for (let i = 0; i < 3; i++) {
+                    character.AddTrait(trait, false)                    
+                }
+            }
+
+            if(!this.IsGrailVowOK(character)) {
+                const trait = VALOUR_PLEDGE_TRAIT
+                for (let i = 0; i < 7; i++) {
+                    character.AddTrait(trait, false)                    
+                }
+            }
+
+            print(`unlocking trait for this character ${character.SubtypeKey} ${character.LocalisedFullName}`)
+            print(JSON.stringify(character.Traits))
+        }
+
         static Init() {
             if(OgrePaladinVowHandler.bInited) return
 

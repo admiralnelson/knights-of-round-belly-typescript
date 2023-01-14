@@ -361,6 +361,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return totalChivalryPoints
         }
 
+        UnlockGrailVowsForBot(ogre: Character) {
+            if(OgreSpawner.DesignatedFaction == null) return
+            if(OgreSpawner.DesignatedFaction.IsHuman) return
+
+            OgrePaladinVowHandler.UnlockAllVows(ogre)
+        }
+
         OnOgreSpawned(character: Character) {
             //duke louis
             if(character.SubtypeKey == DUKE_LOUIS_AGENT_KEY) {
@@ -373,8 +380,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             
             character.ResetActionPoints()
 
+            if(!character.Faction.IsHuman) {
+                this.UnlockGrailVowsForBot(character)
+                return
+            }
+
             //only human can run this function
-            if(!character.Faction.IsHuman) return
             setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
         }
 
@@ -395,7 +406,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             //     StartTestSuite(this)
             // }
             
-            setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 200)
+            StartTestSuite2()
             
         }
 
@@ -593,8 +604,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             OgreSpawner.Init()
             
             //setInterval(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500) dont
-
-            StartTestSuite2()
+            if(OgreSpawner.DesignatedFaction?.IsHuman) {
+                setInterval(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
+            }
 
             this.l.Log(`SetupOgreSpawner ok`)
         }
