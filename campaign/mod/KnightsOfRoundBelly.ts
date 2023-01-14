@@ -381,7 +381,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             character.ResetActionPoints()
 
             if(!character.Faction.IsHuman) {
+                //unlock all the vows
                 this.UnlockGrailVowsForBot(character)
+                //turn off their  wages
+
+                //a bit cheaty? unlock his combat skill tree?
+
                 return
             }
 

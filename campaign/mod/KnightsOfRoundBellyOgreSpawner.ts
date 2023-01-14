@@ -230,7 +230,24 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         /** human only and must be bretonnian faction */
         private static OnConquerSettlement(context: IContext) {
             if(context.character == null) return
+            if(context.occupation_decision_type == null) return
             if(OgreSpawner.designatedFaction == null) return
+
+            const occupationType = context.occupation_decision_type()
+            switch (occupationType) {
+                case "occupation_decision_occupy":
+                case "occupation_decision_occupy_and_vassal":
+                case "occupation_decision_liberate":
+                case "occupation_decision_raze":
+                case "occupation_decision_raze_without_occupy":
+                case "occupation_decision_resettle":
+                case "occupation_decision_resettle_and_vassal":
+                case "occupation_decision_vassal":
+                    break
+            
+                default:
+                    return
+            }
 
             const character = WrapICharacterObjectToCharacter(context.character())
             const lord = TryCastCharacterToLord(character)
