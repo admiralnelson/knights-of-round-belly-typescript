@@ -55,16 +55,16 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         private OgreLordsAndChampions : ConstOgreKeyToOgreData = {
             [DUKE_LOUIS_AGENT_KEY]: {
-                regionKeys: ["wh3_main_combi_region_languille", "wh3_main_combi_region_massif_orcal", "wh3_main_combi_region_granite_massif"],
+                regionKeys: ["wh3_main_combi_region_massif_orcal", "wh3_main_combi_region_pools_of_despair" , "wh3_main_combi_region_granite_massif"],
                 defaultDilemmaKey: "admiralnelson_archduke_recruitment_at_massif_orcal_dilemma_key",
                 canSpawnFromRegion: true,
                 diceRollTreshold: 1,
-                specificDillemaKeys: [
-                    { 
-                        dilemmaKey: "admiralnelson_archduke_recruitment_at_araby_dilemma_key",
-                        regionKeys: [ "wh3_main_combi_region_pools_of_despair" ]
-                    }
-                ],
+                // specificDillemaKeys: [
+                //     { 
+                //         dilemmaKey: "admiralnelson_archduke_recruitment_at_araby_dilemma_key",
+                //         regionKeys: [ "wh3_main_combi_region_pools_of_despair" ]
+                //     }
+                // ],
                 foreName: DUKE_LOUIS_FORENAME,
                 familyName: DUKE_LOUIS_TITLE
             },
@@ -132,6 +132,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             "wh3_twa06_ogr_inf_maneaters_ror_0",
             "wh3_twa07_ogr_cav_crushers_ror_0",
             "wh3_twa08_ogr_mon_stonehorn_0_ror",
+        ]
+
+        private readonly LouisLeGrosStartingArmy = [
+            "wh_dlc07_brt_inf_battle_pilgrims_0",
+            "wh_dlc07_brt_inf_battle_pilgrims_0",
+            "wh_dlc07_brt_inf_battle_pilgrims_0",
+            "wh_main_brt_inf_peasant_bowmen",
+            "wh_main_brt_inf_peasant_bowmen",
         ]
 
         private readonly PeasantSlotPenaltySkills = [
@@ -353,6 +361,20 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return totalChivalryPoints
         }
 
+        OnOgreSpawned(character: Character) {
+            
+            //duke louis
+            if(character.SubtypeKey == DUKE_LOUIS_AGENT_KEY) {
+                const lord = TryCastCharacterToLord(character)
+                if(lord) lord.AddTroops(this.LouisLeGrosStartingArmy)
+            }
+
+            //if hector dont'r recover action points
+            if(character.SubtypeKey == HECTOR_AGENT_KEY) return
+            
+            character.ResetActionPoints()
+        }
+
         Init(): void {
             this.FirstTimeSetup()
            
@@ -423,7 +445,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     const character = context.character ? context.character().character_subtype_key() : "unknown"
                     return character == DUKE_LOUIS_AGENT_KEY
                 },
-                (context) => {
+                () => {
                     this.CalculatePeasantSlotsUsageAndApplyPenalties()
                 },
                 true
@@ -490,7 +512,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
                     return OgreSpawner.DesignatedFaction?.FactionKey == faction.name()
                 },
-                (context) => this.CalculatePeasantSlotsUsageAndApplyPenalties(),
+                () => this.CalculatePeasantSlotsUsageAndApplyPenalties(),
                 true
             )
 
@@ -507,7 +529,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
                     return OgreSpawner.DesignatedFaction?.FactionKey == faction.name()
                 },
-                (context) => this.CalculatePeasantSlotsUsageAndApplyPenalties(),
+                () => this.CalculatePeasantSlotsUsageAndApplyPenalties(),
                 true
             )
 
@@ -519,7 +541,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 "admiralnelson SetupOnCharacterLevelPaneDisableLouisMount",
                 "PanelOpenedCampaign",
                 (context) => context.string ? (context.string == "character_details_panel") : false,
-                (_) => {
+                () => {
                     this.l.LogWarn(`character_details_panel was opened`)
                     this.DisableLouisMountSkillNode()
                 },
@@ -532,7 +554,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     if(context.string == null) return false
                     return context.string == "button_cycle_right" || context.string == "button_cycle_left"
                 },                    
-                (_) => {
+                () => {
                     this.l.LogWarn(`ComponentLClickUp was clicked`)
                     this.DisableLouisMountSkillNode()
                 },
@@ -555,10 +577,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             OgreSpawner.OgreMercenariesUnitKeys = this.OgreMercs
             OgreSpawner.OgreRecruitmentDilemmaOnArmy = BRETONNIA_OGRE_RECRUITMENT_DILEMMA
             OgreSpawner.AddOgreLord(DUKE_LOUIS_AGENT_KEY, this.OgreLordsAndChampions[DUKE_LOUIS_AGENT_KEY])
-            OgreSpawner.AddOgreLord(HECTOR_AGENT_KEY, this.OgreLordsAndChampions[HECTOR_AGENT_KEY])
+            OgreSpawner.AddOgreChampion(HECTOR_AGENT_KEY, this.OgreLordsAndChampions[HECTOR_AGENT_KEY])
             OgreSpawner.OnOgreSpawnEvent = (character) => {
                 this.l.Log(`character has spawned ${character.LocalisedFullName} ${character.SubtypeKey}`)
                 setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
+                this.OnOgreSpawned(character)
             }
             OgreSpawner.OnDesignatedFactionChangeSuccessEvent = (faction) => {
                 this.l.Log(`designated faction is ${faction.FactionKey}`)

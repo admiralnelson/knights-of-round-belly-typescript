@@ -467,8 +467,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return this.CqiNo == otherCharacter.cqi()
         }
 
+        /** reset movement and/or action points of this character */
+        public ResetActionPoints() {
+            cm.replenish_action_points(cm.char_lookup_str(this.GetInternalInterface()))
+        }
+
         /** returns the agentsubtype key of this object */
         public toString(): string {
+            if(!this.IsValid()) return ""
             return this.SubtypeKey
         }
     }
