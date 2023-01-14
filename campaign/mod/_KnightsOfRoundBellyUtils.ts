@@ -87,6 +87,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         return result >= threshold
     }
 
+    /**
+     * Returns true or false. 50% chance
+     */
+    export function IsTrueOrFalse(): boolean {
+        return IsDiceRollSucess(50, 100, 1)
+    }
+
     /** returns the current turn number */
     export function GetTurnNumber(): number {
         return cm.turn_number()

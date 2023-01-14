@@ -127,7 +127,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 OgreChampionKeys.push(key)
             }
 
-            if(IsDiceRollSucess(4, 1, 6) && ogreLordKeys.length > 0) {
+            if(IsTrueOrFalse() && ogreLordKeys.length > 0) {
                 return [ChooseRandom(ogreLordKeys) as string, true]
             }
 
