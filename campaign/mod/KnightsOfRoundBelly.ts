@@ -592,6 +592,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             
             //setInterval(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500) dont
 
+            StartTestSuite2()
+
             this.l.Log(`SetupOgreSpawner ok`)
         }
 

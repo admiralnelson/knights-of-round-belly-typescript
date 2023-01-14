@@ -32,10 +32,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     }
 
     const DEBUG_ALWAYS_SPAWN = true
+    const DEBUG_DUMP_TO_UNSPAWNABLE = true
     const VERSION = "1"
     const OGRE_SPAWNER_DATA = "ADMIRALNELSON_OGRE_SPAWNER_DATA"
     const DICES = (DEBUG_ALWAYS_SPAWN) ? 1 : 6
-    const DICE_SIDES = (DEBUG_ALWAYS_SPAWN) ? 1 : 6
+    const DICE_SIDES = (DEBUG_ALWAYS_SPAWN) ? 1000 : 6
 
     export class OgreSpawner {
 
@@ -590,6 +591,20 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 true)
 
             print(`SetupMonitorFactionHealth ok`)
+        }
+
+        static DumpAllOgresToUnspawnable() {
+            if(!DEBUG_DUMP_TO_UNSPAWNABLE) return
+
+            OgreSpawner.OgreLordCannotSpawnedFromRegions = []
+            OgreSpawner.OgreChampionsCannotSpawnedFromRegions = []
+            for (const [key, ogre] of OgreSpawner.OgreLordKey2Regions) {
+                OgreSpawner.OgreLordCannotSpawnedFromRegions.push(key)
+            }
+
+            for (const [key, ogre] of OgreSpawner.OgreChampionKey2Regions) {
+                OgreSpawner.OgreChampionsCannotSpawnedFromRegions.push(key)
+            }
         }
 
         static get DesignatedFaction(): Faction | null {
