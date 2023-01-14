@@ -1122,6 +1122,11 @@ This function can also reposition the camera, so it's best used on game creation
      * @returns Dilemma triggered successfully. true is always returned if an intervention is generated.
      */
     trigger_dilemma(factionKey: string, dillemaKey: string, triggerCallback?: VoidCallback): boolean
+    /**
+     * Replenishes the action points of a specified character.
+     * @param characterLookup Character lookup string. For more information, see Character Lookups.
+     */
+    replenish_action_points(characterLookup: string): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
