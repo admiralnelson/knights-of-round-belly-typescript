@@ -58,7 +58,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         private static bInited = false
         
-        private static bAllowToResetSpawnedOgreKeys = false
+        private static bAllowToResetSpawnedOgreKeys = true
 
         private static designatedFaction : Faction | null = null
 
