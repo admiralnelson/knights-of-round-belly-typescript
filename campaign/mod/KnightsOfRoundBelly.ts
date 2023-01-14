@@ -362,7 +362,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         OnOgreSpawned(character: Character) {
-            
             //duke louis
             if(character.SubtypeKey == DUKE_LOUIS_AGENT_KEY) {
                 const lord = TryCastCharacterToLord(character)
@@ -370,9 +369,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }
 
             //if hector dont'r recover action points
-            if(character.SubtypeKey == HECTOR_AGENT_KEY) return
+            if(character.Faction.IsHuman && character.SubtypeKey == HECTOR_AGENT_KEY) return
             
             character.ResetActionPoints()
+
+            //only human can run this function
+            if(!character.Faction.IsHuman) return
+            setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
         }
 
         Init(): void {
@@ -580,7 +583,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             OgreSpawner.AddOgreChampion(HECTOR_AGENT_KEY, this.OgreLordsAndChampions[HECTOR_AGENT_KEY])
             OgreSpawner.OnOgreSpawnEvent = (character) => {
                 this.l.Log(`character has spawned ${character.LocalisedFullName} ${character.SubtypeKey}`)
-                setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
                 this.OnOgreSpawned(character)
             }
             OgreSpawner.OnDesignatedFactionChangeSuccessEvent = (faction) => {

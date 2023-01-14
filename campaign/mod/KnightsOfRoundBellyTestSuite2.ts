@@ -1,8 +1,11 @@
 namespace AdmiralNelsonKnightsOfTheRoundBelly {
     
     function SpawnOgreOnLouen() {
-        const louen = OgreSpawner.DesignatedFaction?.Lords.find((lord) => lord.SubtypeKey.includes("louen_leoncouer"))
-        if(louen) louen.AddTroops([
+        const factionLeader = OgreSpawner.DesignatedFaction?.FactionLeader
+        if(factionLeader == null) return
+        
+        const factionLord = TryCastCharacterToLord(factionLeader)
+        if(factionLord) factionLord.AddTroops([
             "wh3_main_ogr_cav_mournfang_cavalry_0",
             "wh3_main_ogr_cav_mournfang_cavalry_1",
             "wh3_main_ogr_cav_mournfang_cavalry_2",

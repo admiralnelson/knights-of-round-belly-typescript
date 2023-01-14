@@ -85,6 +85,18 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         /**
+         * Returns faction leader character
+         * @returns may return null if faction is dead or invalid
+         */
+        public get FactionLeader(): Character | null {
+            if(!this.IsValid()) return null
+            if(this.IsDead) return null
+
+            const lord = WrapICharacterObjectToCharacter(this.factionInterface.faction_leader())
+            return lord
+        }
+
+        /**
          *  Check if this faction is dead
          * @returns true if dead
          */
