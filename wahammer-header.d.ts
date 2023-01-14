@@ -1401,6 +1401,13 @@ interface IContext {
      * - PositiveDiplomaticEvent 
      */
     state_gift_amount?(): number
+
+    /**
+     *  This function is available for this following events:  
+     * 
+     *  - CharacterPerformsSettlementOccupationDecision
+     */
+    occupation_decision_type?(): string
 }
 
 interface IRealTimer {
