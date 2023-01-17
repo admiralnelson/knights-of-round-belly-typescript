@@ -90,15 +90,23 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             wPrint(`Data saved: ${jsonData}`)
         }
 
-        private static GetOgreAssociatedWithRegionKey(regionKey: string): [ogreKey: string, ogre: OgreSpawnData, isALord: boolean] | null {
+        private static GetOgreAssociatedWithRegionKey(regionKey: string): [ogreKey: string, dillemaKey: string, tresholdChance: number, isALord: boolean] | null {
             for (const [key, ogre] of OgreSpawner.OgreLordKey2Regions) {
                 const found = ogre.regionKeys.indexOf(regionKey) >= 0
-                if(found) return [key, ogre, true]
+                if(found) return [key, ogre.defaultDilemmaKey, ogre.diceRollTreshold, true]
+                if(ogre.specificDillemaKeys) {
+                    const foundAnother = ogre.specificDillemaKeys.find( (specificDillemaKey) => specificDillemaKey.regionKeys.includes(regionKey) )
+                    if(foundAnother) return [key, foundAnother.dilemmaKey, ogre.diceRollTreshold , true]
+                }
             }
 
             for (const [key, ogre] of OgreSpawner.OgreChampionKey2Regions) {
                 const found = ogre.regionKeys.indexOf(regionKey) >= 0
-                if(found) return [key, ogre, false]
+                if(found) return [key, ogre.defaultDilemmaKey, ogre.diceRollTreshold, false]
+                if(ogre.specificDillemaKeys) {
+                    const foundAnother = ogre.specificDillemaKeys.find( (specificDillemaKey) => specificDillemaKey.regionKeys.includes(regionKey) )
+                    if(foundAnother) return [key, foundAnother.dilemmaKey, ogre.diceRollTreshold , false]
+                }
             }
 
             return null
@@ -463,19 +471,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 return false
             }
 
-            const treshold = ogreSpawnData[1].diceRollTreshold
+            const treshold = ogreSpawnData[2]
             if(!IsDiceRollSucess(treshold, DICES, DICE_SIDES)) {
                 logger.LogWarn(`dice roll failed`)
                 return false
             }
 
-            let dilemmaKey = ogreSpawnData[1].defaultDilemmaKey
-            const isOgreLord = ogreSpawnData[2]
-            if(ogreSpawnData[1].specificDillemaKeys != null) {
-                print(`specific dillemakeys was detected ${JSON.stringify(ogreSpawnData[1].specificDillemaKeys)}`)
-                const findTheKey = ogreSpawnData[1].specificDillemaKeys.find( (dilemmaKey2Region) => dilemmaKey2Region.regionKeys.includes(regionKey) )
-                dilemmaKey = (findTheKey) ? findTheKey.dilemmaKey : dilemmaKey
-            }
+            const dilemmaKey = ogreSpawnData[1]
+            const isOgreLord = ogreSpawnData[3]      
 
             OgreSpawner.QueueDillema(lord, ogreKey, dilemmaKey, isOgreLord)
 

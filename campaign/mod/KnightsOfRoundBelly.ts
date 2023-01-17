@@ -55,16 +55,16 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         private OgreLordsAndChampions : ConstOgreKeyToOgreData = {
             [DUKE_LOUIS_AGENT_KEY]: {
-                regionKeys: ["wh3_main_combi_region_massif_orcal", "wh3_main_combi_region_pools_of_despair" , "wh3_main_combi_region_granite_massif"],
+                regionKeys: ["wh3_main_combi_region_massif_orcal"],
                 defaultDilemmaKey: "admiralnelson_archduke_recruitment_at_massif_orcal_dilemma_key",
                 canSpawnFromRegion: true,
                 diceRollTreshold: 1,
-                // specificDillemaKeys: [
-                //     { 
-                //         dilemmaKey: "admiralnelson_archduke_recruitment_at_araby_dilemma_key",
-                //         regionKeys: [ "wh3_main_combi_region_pools_of_despair" ]
-                //     }
-                // ],
+                specificDillemaKeys: [
+                    { 
+                        dilemmaKey: "admiralnelson_archduke_recruitment_at_araby_dilemma_key",
+                        regionKeys: [ "wh3_main_combi_region_languille", "wh3_main_combi_region_pools_of_despair" ]
+                     }
+                ],
                 foreName: DUKE_LOUIS_FORENAME,
                 familyName: DUKE_LOUIS_TITLE
             },
