@@ -33,6 +33,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
     const DEBUG_ALWAYS_SPAWN = true
     const DEBUG_DUMP_TO_UNSPAWNABLE = true
+    const DEBUG_AI_TEST = true
+
     const VERSION = "1"
     const OGRE_SPAWNER_DATA = "ADMIRALNELSON_OGRE_SPAWNER_DATA"
     const DICES = (DEBUG_ALWAYS_SPAWN) ? 1 : 6
@@ -44,7 +46,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         public static OgreMercenariesUnitKeys: string[] = []
         public static DiceRollTresholdForRandomSpawnOnArmy = {
             Human: 28,
-            Bot: 20
+            Bot: (DEBUG_AI_TEST) ? 1 : 20
         }
         public static OgreRecruitmentDilemmaOnArmy = ""
 
