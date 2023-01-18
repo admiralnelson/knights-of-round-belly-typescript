@@ -84,7 +84,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 ],
                 defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_woodelves_region_dilemma_key",
                 canSpawnFromRegion: true,
-                diceRollTreshold: 1,
+                diceRollTreshold: 23,
                 foreName: CLAUDIN_FORENAME,
                 familyName: CLAUDIN_HOUSE_OF
             },
@@ -99,7 +99,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 ],
                 defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_badlands_dilemma_key",
                 canSpawnFromRegion: true,
-                diceRollTreshold: 1,
+                diceRollTreshold: 25,
                 foreName: GARRAVAIN_FORENAME,
                 familyName: GARRAVAIN_HOUSE_OF
             },
@@ -114,7 +114,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 ],
                 defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_norscan_region_dilemma_key",
                 canSpawnFromRegion: true,
-                diceRollTreshold: 1,
+                diceRollTreshold: 25,
                 foreName: YVAIN_FORENAME,
                 familyName: YVAIN_HOUSE_OF
             },
@@ -127,7 +127,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 ],
                 defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_border_princes_and_slyvania_dilemma_key",
                 canSpawnFromRegion: true,
-                diceRollTreshold: 1,
+                diceRollTreshold: 22,
                 foreName: LUCANT_FORENAME,
                 familyName: LUCANT_HOUSE_OF
             },
@@ -141,7 +141,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 ],
                 defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_empire_marienberg_region_dilemma_key",
                 canSpawnFromRegion: true,
-                diceRollTreshold: 1,
+                diceRollTreshold: 23,
                 foreName: GORENMANT_FORENAME,
                 familyName: GORNEMENT_HOUSE_OF
             }
