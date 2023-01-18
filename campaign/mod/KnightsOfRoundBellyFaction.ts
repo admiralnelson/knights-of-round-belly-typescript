@@ -149,6 +149,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             cm.apply_effect_bundle(effectBundleKey, this.FactionKey, turns)
         }
 
+        public HasEffectBundle(effectBundleKey: string): boolean {
+            return this.GetFactionInterface().has_effect_bundle(effectBundleKey)
+        }
+
        /**
         * Registers a turn countdown event for this faction. The supplied script event will be triggered after the specified number of turns has passed, when the FactionTurnStart event is received for the specified faction.
         * @param turns Number of turns from now to trigger the event.

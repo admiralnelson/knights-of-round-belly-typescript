@@ -33,6 +33,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     export const PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_not_commited_yet_scripted_trait_key"
     export const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
 
+    const LOW_UPKEEP_FOR_AI_KEY = "admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key"
+
     const BRETONNIA_OGRE_RECRUITMENT_DILEMMA = "admiralnelson_ogre_recruitment_because_army_has_ogre_merc_dilemma_key"
 
 
@@ -477,10 +479,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOgreSpawner()
             /** START TEST SUITE */
             // if(OgreSpawner.FindAllOgres().length == 0 && DEBUG) {
+            //     OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
             //     StartTestSuite(this)
             // }
             
-            // StartTestSuite2()
+            //StartTestSuite2()
+            
             
         }
 
@@ -679,6 +683,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }
             OgreSpawner.OnDesignatedFactionChangeSuccessEvent = (faction) => {
                 this.l.Log(`designated faction is ${faction.FactionKey}`)
+                if(!faction.IsHuman) faction.ApplyEffectBundle(LOW_UPKEEP_FOR_AI_KEY)
             }
 
             OgreSpawner.InitialiseForTheFirstTime(this.BretonnianFactionsKeys)
