@@ -17,15 +17,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     export const LUCANT_AGENT_KEY = "admnelson_bret_ogre_lucant_le_boutellier_agent_key"
     export const GORNEMANT_AGENT_KEY = "admnelson_bret_ogre_gornemant_de_goort_agent_key"
 
-    const OGRE_CHAMPIONS_KEYS = [
-        HECTOR_AGENT_KEY, 
-        CLAUDIN_AGENT_KEY, 
-        GARRAVAIN_AGENT_KEY, 
-        YVAIN_LE_BATARD_AGENT_KEY,
-        LUCANT_AGENT_KEY,
-        GORNEMANT_AGENT_KEY
-    ]
-
     export const DUKE_LOUIS_FORENAME = "names_name_11382017"; export const DUKE_LOUIS_TITLE = "names_name_11382018"
     export const HECTOR_FORENAME = "names_name_11382022"; export const HECTOR_HOUSE_OF = "names_name_11382023"
     export const CLAUDIN_FORENAME = "names_name_11382019"; export const CLAUDIN_HOUSE_OF = ""
@@ -55,27 +46,105 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         private OgreLordsAndChampions : ConstOgreKeyToOgreData = {
             [DUKE_LOUIS_AGENT_KEY]: {
-                regionKeys: ["wh3_main_combi_region_massif_orcal"],
+                regionKeys: [
+                    "wh3_main_combi_region_massif_orcal"
+                ],
                 defaultDilemmaKey: "admiralnelson_archduke_recruitment_at_massif_orcal_dilemma_key",
                 canSpawnFromRegion: true,
                 diceRollTreshold: 1,
                 specificDillemaKeys: [
                     { 
                         dilemmaKey: "admiralnelson_archduke_recruitment_at_araby_dilemma_key",
-                        regionKeys: [ "wh3_main_combi_region_languille", "wh3_main_combi_region_pools_of_despair" ]
+                        regionKeys: [ 
+                            "wh3_main_combi_region_pools_of_despair" 
+                        ]
                      }
                 ],
                 foreName: DUKE_LOUIS_FORENAME,
                 familyName: DUKE_LOUIS_TITLE
             },
             [HECTOR_AGENT_KEY]: {
-                regionKeys: ["wh3_main_combi_region_skavenblight"],
+                regionKeys: [
+                    "wh3_main_combi_region_skavenblight"
+                ],
                 defaultDilemmaKey: "admiralnelson_hector_recruitment_at_skavenblight_dilemma_key",
                 canSpawnFromRegion: true,
                 diceRollTreshold: 1,
                 foreName: HECTOR_FORENAME,
                 familyName: HECTOR_HOUSE_OF
             },
+            [CLAUDIN_AGENT_KEY]: {
+                regionKeys: [
+                    "wh3_main_combi_region_the_estalia_coastline", 
+                    "wh3_main_combi_region_luccini", 
+                    "wh3_main_combi_region_bilbali", 
+                    "wh3_main_combi_region_magritta", 
+                    "wh3_main_combi_region_miragliano",
+                    "wh3_main_combi_region_sartosa"
+                ],
+                defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_woodelves_region_dilemma_key",
+                canSpawnFromRegion: true,
+                diceRollTreshold: 1,
+                foreName: CLAUDIN_FORENAME,
+                familyName: CLAUDIN_HOUSE_OF
+            },
+            [GARRAVAIN_AGENT_KEY]: {
+                regionKeys: [
+                    "wh3_main_combi_region_bitterstone_mine",
+                    "wh3_main_combi_region_dragonhorn_mines",
+                    "wh3_main_combi_region_ekrund",
+                    "wh3_main_combi_region_stonemine_tower",
+                    "wh3_main_combi_region_barag_dawazbag",
+                    "wh3_main_combi_region_zandri"
+                ],
+                defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_badlands_dilemma_key",
+                canSpawnFromRegion: true,
+                diceRollTreshold: 1,
+                foreName: GARRAVAIN_FORENAME,
+                familyName: GARRAVAIN_HOUSE_OF
+            },
+            [YVAIN_LE_BATARD_AGENT_KEY]: {
+                regionKeys: [
+                    "wh3_main_combi_region_isle_of_wights",
+                    "wh3_main_combi_region_pack_ice_bay",
+                    "wh3_main_combi_region_citadel_of_lead",
+                    "wh3_main_combi_region_longship_graveyard",
+                    "wh3_main_chaos_region_icedrake_fjord",
+                    "wh3_main_combi_region_troll_fjord"
+                ],
+                defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_norscan_region_dilemma_key",
+                canSpawnFromRegion: true,
+                diceRollTreshold: 1,
+                foreName: YVAIN_FORENAME,
+                familyName: YVAIN_HOUSE_OF
+            },
+            [LUCANT_AGENT_KEY]: {
+                regionKeys: [
+                    "wh3_main_combi_region_eschen",
+                    "wh3_main_combi_region_mordheim",
+                    "wh3_main_combi_region_castle_drakenhof",
+                    "wh3_main_combi_region_castle_templehof"
+                ],
+                defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_border_princes_and_slyvania_dilemma_key",
+                canSpawnFromRegion: true,
+                diceRollTreshold: 1,
+                foreName: LUCANT_FORENAME,
+                familyName: LUCANT_HOUSE_OF
+            },
+            [GORNEMANT_AGENT_KEY]: {
+                regionKeys: [
+                    "wh3_main_combi_region_the_black_pit",
+                    "wh3_main_combi_region_weismund",
+                    "wh3_main_combi_region_middenstag",
+                    "wh3_main_combi_region_wreckers_point",
+                    "wh3_main_combi_region_brass_keep"
+                ],
+                defaultDilemmaKey: "admiralnelson_ogre_recruitment_at_empire_marienberg_region_dilemma_key",
+                canSpawnFromRegion: true,
+                diceRollTreshold: 1,
+                foreName: GORENMANT_FORENAME,
+                familyName: GORNEMENT_HOUSE_OF
+            }
         }
 
         private readonly BretonnianFactionsKeys = [
@@ -584,10 +653,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         SetupOgreVowHandler(): void {
-            for (const key of OGRE_CHAMPIONS_KEYS) {                
+            for (const key of Object.keys(this.OgreLordsAndChampions)) {                
                 OgrePaladinVowHandler.AllowedOgreAgentKeys.add(key)
             }
-            
             OgrePaladinVowHandler.Init()
             this.l.Log(`SetupOgreVowHandler ok`)
         }
@@ -595,8 +663,16 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         SetupOgreSpawner(): void {
             OgreSpawner.OgreMercenariesUnitKeys = this.OgreMercs
             OgreSpawner.OgreRecruitmentDilemmaOnArmy = BRETONNIA_OGRE_RECRUITMENT_DILEMMA
+            
             OgreSpawner.AddOgreLord(DUKE_LOUIS_AGENT_KEY, this.OgreLordsAndChampions[DUKE_LOUIS_AGENT_KEY])
+
             OgreSpawner.AddOgreChampion(HECTOR_AGENT_KEY, this.OgreLordsAndChampions[HECTOR_AGENT_KEY])
+            OgreSpawner.AddOgreChampion(LUCANT_AGENT_KEY, this.OgreLordsAndChampions[LUCANT_AGENT_KEY])
+            OgreSpawner.AddOgreChampion(CLAUDIN_AGENT_KEY, this.OgreLordsAndChampions[CLAUDIN_AGENT_KEY])
+            OgreSpawner.AddOgreChampion(GARRAVAIN_AGENT_KEY, this.OgreLordsAndChampions[GARRAVAIN_AGENT_KEY])
+            OgreSpawner.AddOgreChampion(YVAIN_LE_BATARD_AGENT_KEY, this.OgreLordsAndChampions[YVAIN_LE_BATARD_AGENT_KEY])
+            OgreSpawner.AddOgreChampion(GORNEMANT_AGENT_KEY, this.OgreLordsAndChampions[GORNEMANT_AGENT_KEY])
+            
             OgreSpawner.OnOgreSpawnEvent = (character) => {
                 this.l.Log(`character has spawned ${character.LocalisedFullName} ${character.SubtypeKey}`)
                 this.OnOgreSpawned(character)
