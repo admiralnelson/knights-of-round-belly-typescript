@@ -442,6 +442,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         /**
+         * Give item to this character and equips it
+         * @param anciliaryKey the item key (aka anciliary) from anciliary info table
+         */
+        public GiveItem(anciliaryKey: string): void {
+            cm.force_add_ancillary(this.GetInternalInterface(), anciliaryKey, true, false)
+        }
+
+        /**
          * Kills this character. WARNING: this can render methods of this object to be invalid!
          * @param destroyTroop destroy the troop too? (for general/lord only)
          */
