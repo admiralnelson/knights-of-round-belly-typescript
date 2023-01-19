@@ -213,6 +213,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             "wh_main_brt_inf_peasant_bowmen",
         ]
 
+        private readonly LouisLeGrossStartingArmyBot = [
+            "wh3_main_ogr_cav_mournfang_cavalry_0",
+            "wh3_main_ogr_cav_mournfang_cavalry_1",
+            "wh_dlc07_brt_cav_grail_guardians_0",
+            "wh_dlc07_brt_cav_grail_guardians_0",
+            "wh_dlc07_brt_cav_grail_guardians_0",
+        ]
+
         private readonly PeasantSlotPenaltySkills = [
             {skill: CIVILISED_SKILL_KEY, penalty: -1 },
             {skill: OGRE_SKILL_KEY, penalty: 5},
@@ -443,7 +451,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             //duke louis
             if(character.SubtypeKey == DUKE_LOUIS_AGENT_KEY) {
                 const lord = TryCastCharacterToLord(character)
-                if(lord) lord.AddTroops(this.LouisLeGrosStartingArmy)
+                if(lord) {
+                    if(lord.Faction.IsHuman) lord.AddTroops(this.LouisLeGrosStartingArmy)
+                    else lord.AddTroops(this.LouisLeGrossStartingArmyBot)
+                }
             }
 
             //if hector dont'r recover action points
