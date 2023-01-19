@@ -1,7 +1,5 @@
 namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
-    const DEBUG = true
-
     export const VERSION = 1
     export const ADMKNIGHTSOFTHEROUNDBELLY = "ADMKNIGHTSOFTHEROUNDBELLY:v"+VERSION
 
@@ -29,6 +27,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     const OGRE_SKILL_KEY          = "admiralnelson_ogre_being_is_generally_unchivalrous_and_savage_skills_key_background_skill_scripted"
     const GREATER_GIRTH_SKILL_KEY = "admiralnelson_wh3_main_skill_ogr_tyrant_unique_greater_girth"
     const LOUIS_MOUNT_SKILL_KEY   = "admiralnelson_louis_mount_unlock_item_skill_key"
+
+    const LOUIS_MOUNT_KEY_FOR_BOT = "admiralnelson_louis_steed_anciliary_key"
+    const LOUISE_MACE_KEY_FOR_BOT = "admiralnelson_louis_grand_mace_doombringer"
     
     export const PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_not_commited_yet_scripted_trait_key"
     export const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
@@ -49,6 +50,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         private OgreLordsAndChampions : ConstOgreKeyToOgreData = {
             [DUKE_LOUIS_AGENT_KEY]: {
                 regionKeys: [
+                    "wh3_main_combi_region_languille",
                     "wh3_main_combi_region_massif_orcal"
                 ],
                 defaultDilemmaKey: "admiralnelson_archduke_recruitment_at_massif_orcal_dilemma_key",
@@ -380,26 +382,28 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 "skills_subpanel",
                 "auto_management_holder")
 
-            if(theObject) {
-                const context = theObject.GetContextObject("CcoCampaignCharacter")
-                const agentKey = context?.Call("AgentSubtypeRecordContext().Key") as string
-                if(agentKey != DUKE_LOUIS_AGENT_KEY) {
-                    if(autoManagementButton) autoManagementButton.PropagateVisibility(true)
-                    return
-                }
+            if(theObject == false) return
 
-                //if louis
-
-                //hide automanage button
-                if(autoManagementButton) autoManagementButton.PropagateVisibility(false)
-                
-                const cqi = context?.Call(`CQI()`) as number
-                const theCharacter = FindCharacter(cqi)
-                if(theCharacter) {
-                    if(OgrePaladinVowHandler.IsQuestingVowOK(theCharacter) || 
-                       OgrePaladinVowHandler.IsGrailVowOK(theCharacter)) return
-                }
+            const context = theObject.GetContextObject("CcoCampaignCharacter")
+            const agentKey = context?.Call("AgentSubtypeRecordContext().Key") as string
+            if(agentKey != DUKE_LOUIS_AGENT_KEY) {
+                if(autoManagementButton) autoManagementButton.PropagateVisibility(true)
+                return
             }
+
+            //if louis
+
+            //hide automanage button
+            if(autoManagementButton) autoManagementButton.PropagateVisibility(false)
+            
+            const cqi = context?.Call(`CQI()`) as number
+            const theCharacter = FindCharacter(cqi)
+
+            //don't lock if louis has unlocked grail quest
+            if(theCharacter) {
+                if(theCharacter.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) >= 2) return
+            }
+        
 
             //disable his mount skill
             const theSkillButton = find_uicomponent(core.get_ui_root(), 
@@ -440,40 +444,63 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return totalChivalryPoints
         }
 
+        UnlockLouisVowsForBot(louis: Character) {
+            if(louis.Faction.IsHuman) return
+            if(louis.SubtypeKey != DUKE_LOUIS_AGENT_KEY) return
+
+            const trait1 = "wh_dlc07_trait_brt_knights_vow_chivalry_pledge"
+            for (let i = 0; i < 7; i++) {
+                louis.AddTrait(trait1, false) 
+            }
+
+            const trait2 = "wh_dlc07_trait_brt_questing_vow_campaign_pledge"
+            for (let i = 0; i < 3; i++) {
+                louis.AddTrait(trait2, false)
+            }
+
+            const trait3 = "wh_dlc07_trait_brt_grail_vow_valour_pledge"
+            for (let i = 0; i < 7; i++) {
+                louis.AddTrait(trait3, false)
+            }
+
+            this.l.Log(`UnlockLouisVowsForBot louis unlocked!`)
+            this.l.Log(`${JSON.stringify(louis.Traits)}`)
+        }
+
         UnlockGrailVowsForBot(ogre: Character) {
             if(OgreSpawner.DesignatedFaction == null) return
             if(OgreSpawner.DesignatedFaction.IsHuman) return
 
-            OgrePaladinVowHandler.UnlockAllVows(ogre)
+            if(ogre.SubtypeKey != DUKE_LOUIS_AGENT_KEY) OgrePaladinVowHandler.UnlockAllVows(ogre)
+            else this.UnlockLouisVowsForBot(ogre)
         }
 
         OnOgreSpawned(character: Character) {
+            //if hector dont'r recover action points
+            if(!character.Faction.IsHuman || character.SubtypeKey != HECTOR_AGENT_KEY) character.ResetActionPoints()
+
+            if(character.Faction.IsHuman) character.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+
+            if(!character.Faction.IsHuman) this.UnlockGrailVowsForBot(character)
+            
             //duke louis
             if(character.SubtypeKey == DUKE_LOUIS_AGENT_KEY) {
                 const lord = TryCastCharacterToLord(character)
                 if(lord) {
                     if(lord.Faction.IsHuman) lord.AddTroops(this.LouisLeGrosStartingArmy)
                     else lord.AddTroops(this.LouisLeGrossStartingArmyBot)
+
+                    if(lord.Faction.IsHuman) lord.Faction.TriggerMission(LOUIS_MISSION_KEY, true)
+                    else {
+                        lord.GiveItem(LOUIS_MOUNT_KEY_FOR_BOT)
+                        lord.GiveItem(LOUISE_MACE_KEY_FOR_BOT)
+                    }
                 }
-            }
 
-            //if hector dont'r recover action points
-            if(character.Faction.IsHuman && character.SubtypeKey == HECTOR_AGENT_KEY) return
-            
-            character.ResetActionPoints()
-
-            if(!character.Faction.IsHuman) {
-                //unlock all the vows
-                this.UnlockGrailVowsForBot(character)
-                //turn off their  wages
-
-                //a bit cheaty? unlock his combat skill tree?
-
-                return
             }
 
             //only human can run this function
-            setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
+            if(character.Faction.IsHuman) setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
         }
 
         Init(): void {
@@ -490,8 +517,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOgreSpawner()
             /** START TEST SUITE */
             // if(OgreSpawner.FindAllOgres().length == 0 && DEBUG) {
-            //     OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
-            //     StartTestSuite(this)
+            //      OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
+            //      StartTestSuite(this)
             // }
             
             //StartTestSuite2()
@@ -644,23 +671,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 "admiralnelson SetupOnCharacterLevelPaneDisableLouisMount",
                 "PanelOpenedCampaign",
                 (context) => context.string ? (context.string == "character_details_panel") : false,
-                () => {
-                    this.l.LogWarn(`character_details_panel was opened`)
-                    this.DisableLouisMountSkillNode()
-                },
+                () => setTimeout(() => this.DisableLouisMountSkillNode(), 300),
                 true
             )
             core.add_listener(
                 "admiralnelson SetupOnCharacterLevelPaneDisableLouisMount 2",
                 "ComponentLClickUp",
-                (context) => {
-                    if(context.string == null) return false
-                    return context.string == "button_cycle_right" || context.string == "button_cycle_left"
-                },                    
-                () => {
-                    this.l.LogWarn(`ComponentLClickUp was clicked`)
-                    this.DisableLouisMountSkillNode()
-                },
+                true,                    
+                () => setTimeout(() => this.DisableLouisMountSkillNode(), 300),
                 true
             )
             
@@ -693,16 +711,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 this.OnOgreSpawned(character)
             }
             OgreSpawner.OnDesignatedFactionChangeSuccessEvent = (faction) => {
-                this.l.Log(`designated faction is ${faction.FactionKey}`)
+                this.l.Log(`designated faction is ${faction.FactionKey} is human? ${faction.IsHuman}`)
                 if(!faction.IsHuman) faction.ApplyEffectBundle(LOW_UPKEEP_FOR_AI_KEY)
             }
 
             OgreSpawner.InitialiseForTheFirstTime(this.BretonnianFactionsKeys)
             OgreSpawner.Init()
             
-            //setInterval(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500) dont
             if(OgreSpawner.DesignatedFaction?.IsHuman) {
-                setInterval(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
+                setInterval(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500) //bad idea
             }
 
             this.l.Log(`SetupOgreSpawner ok`)
