@@ -76,8 +76,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     /**
      * Rolls a xDy dice. For example 2D5 > 10 (the threshold)? 
      * @param threshold total points 
-     * @param numberOfSide number of side on a dice
      * @param numberOfDice how many dices to be rolled
+     * @param numberOfSide number of side on a dice
      */
     export function IsDiceRollSucess(threshold: number, numberOfDices: number, numberOfSide: number): boolean {
         let result = 0
@@ -91,7 +91,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
      * Returns true or false. 50% chance
      */
     export function IsTrueOrFalse(): boolean {
-        return IsDiceRollSucess(50, 100, 1)
+        return IsDiceRollSucess(50, 1, 100)
     }
 
     /** returns the current turn number */
