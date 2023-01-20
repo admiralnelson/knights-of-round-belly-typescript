@@ -521,8 +521,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.FirstTimeSetup()
            
             this.SetupOnOgreChampionSpawned()
-            this.SetupOnSkillAllocated()
-            this.SetupOnCharacterRankUp()
             this.SetupGiveOgreLessPenaltiesForCompletingGrailQuests()
             this.SetupOnFactionTurnStart()
             this.SetupOnFactionTurnEnd()
@@ -531,10 +529,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOgreSpawner()
             this.SetupUpdatePeasantSlotUsage()
             /** START TEST SUITE */
-            // if(OgreSpawner.FindAllOgres().length == 0) {
-            //        OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
-            //        StartTestSuite(this)
-            // }
+            if(OgreSpawner.FindAllOgres().length == 0) {
+                OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
+                StartTestSuite(this)
+            }
             
             //StartTestSuite2()
             
@@ -560,42 +558,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 true
             )
             this.l.Log("SetupOnOgreChampionSpawned ok")
-        }
-
-        SetupOnSkillAllocated() {
-            core.add_listener(
-                "Admiralnelson setup on CharacterSkillPointAllocated for LouisLeGros",
-                "CharacterSkillPointAllocated",
-                (context) => {
-                    const character = context.character ? context.character().character_subtype_key() : "unknown"
-                    return character == DUKE_LOUIS_AGENT_KEY
-                },
-                (context) => {
-                    const skillKey = context.skill_point_spent_on ? context.skill_point_spent_on() : "UNKNOWN"
-                    const character = context.character ? context.character().character_subtype_key() : "unknown"
-                    this.l.Log(`${character} spent on ${skillKey}`)
-                    this.CalculatePeasantSlotsUsageAndApplyPenalties()
-                },
-                true
-            )
-            this.l.Log(`CharacterSkillPointAllocated for LouisLeGros`)
-            this.l.Log("SetupOnSkillAllocated ok")
-        }
-
-        SetupOnCharacterRankUp() {
-            core.add_listener(
-                "Admiralnelson setup on CharacterRankUp for LouisLeGros",
-                "CharacterRankUp",
-                (context) => {
-                    const character = context.character ? context.character().character_subtype_key() : "unknown"
-                    return character == DUKE_LOUIS_AGENT_KEY
-                },
-                () => {
-                    this.CalculatePeasantSlotsUsageAndApplyPenalties()
-                },
-                true
-            )
-            this.l.Log("SetupOnCharacterRankUp ok")
         }
 
         SetupGiveOgreLessPenaltiesForCompletingGrailQuests() {
