@@ -31,9 +31,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         version: string
     }
 
-    const DEBUG_ALWAYS_SPAWN = true
-    const DEBUG_DUMP_TO_UNSPAWNABLE = true
-    const DEBUG_AI_TEST = true
+    const DEBUG_ALWAYS_SPAWN = false
+    const DEBUG_DUMP_TO_UNSPAWNABLE = false
+    const DEBUG_AI_TEST = false
 
     const VERSION = "1"
     const OGRE_SPAWNER_DATA = "ADMIRALNELSON_OGRE_SPAWNER_DATA"
