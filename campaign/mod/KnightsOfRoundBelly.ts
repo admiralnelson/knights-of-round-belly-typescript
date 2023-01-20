@@ -2,6 +2,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
     export const VERSION = 1
 
+    const VERBOSE = false
+
     const PEASANTS_EFFECT_PREFIX = "wh_dlc07_bundle_peasant_penalty_"
 
     export const LOUIS_MISSION_KEY    = "admiralnelson_louis_grand_mace_mission_key"
@@ -244,19 +246,23 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             used: 0, free: 0
         }
 
+        VerbosePrint(str: string): void {
+            if(VERBOSE) this.l.Log(str)
+        }
+
         GetPeasantSlotsUsedByOgres(): number {
             const ogres = OgreSpawner.FindAllOgres()
             let totalPeasantsUsedByOgres = 0
             for (const theOgre of ogres) {
-                this.l.Log(`GetPeasantSlotsUsedByOgres - iterating ${theOgre.SubtypeKey} ${theOgre.LocalisedFullName}`)
+                this.VerbosePrint(`GetPeasantSlotsUsedByOgres - iterating ${theOgre.SubtypeKey} ${theOgre.LocalisedFullName}`)
                 for (const skill of this.PeasantSlotPenaltySkills) {
-                    this.l.Log(`    skill: ${skill.skill}? ${theOgre.HasSkill(skill.skill) ? skill.penalty : "nope"}`)
+                    this.VerbosePrint(`    skill: ${skill.skill}? ${theOgre.HasSkill(skill.skill) ? skill.penalty : "nope"}`)
                     totalPeasantsUsedByOgres += theOgre.HasSkill(skill.skill) ? skill.penalty : 0
                 }                
                 const traitLevel = theOgre.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY)
                 let traitLevel2PeasantUsageReduction = this.MapTraitLevelToSlotPenaltyReduction.get(traitLevel) ?? 0
                 if(theOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) traitLevel2PeasantUsageReduction++
-                this.l.Log(`GetPeasantSlotsUsedByOgres - trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2PeasantUsageReduction=${traitLevel2PeasantUsageReduction} PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY=${theOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)}`)
+                this.VerbosePrint(`GetPeasantSlotsUsedByOgres - trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2PeasantUsageReduction=${traitLevel2PeasantUsageReduction} PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY=${theOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)}`)
 
                 totalPeasantsUsedByOgres += traitLevel2PeasantUsageReduction
             }
@@ -300,22 +306,22 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const peasantsAllocatedByOgre = this.GetPeasantSlotsUsedByOgres()
             const totalAllocatedPeasants = currentPeasantUsageCount + peasantsAllocatedByOgre
             common.set_context_value(`peasant_count_${factionKey}`, totalAllocatedPeasants)
-            this.l.Log(`CalculatePeasantSlotsUsage currentPeasantUsageCount=${currentPeasantUsageCount} peasantsAllocatedByOgre=${peasantsAllocatedByOgre} totalAllocatedPeasants=${totalAllocatedPeasants}`)
+            this.VerbosePrint(`CalculatePeasantSlotsUsage currentPeasantUsageCount=${currentPeasantUsageCount} peasantsAllocatedByOgre=${peasantsAllocatedByOgre} totalAllocatedPeasants=${totalAllocatedPeasants}`)
 
             //clear all penalties first
             this.ClearAllPenalties()
 
             //apply the penalties
             let peasantPercent = (totalAllocatedPeasants / freePeasantCount) * 100
-            this.l.Log(`Peasant Percent: ${peasantPercent}%`)
+            this.VerbosePrint(`Peasant Percent: ${peasantPercent}%`)
             peasantPercent = Math.floor(peasantPercent)
-            this.l.Log(`Peasant Percent Rounded: ${peasantPercent}%`)
+            this.VerbosePrint(`Peasant Percent Rounded: ${peasantPercent}%`)
             peasantPercent = Math.min(peasantPercent, 200)
-            this.l.Log(`Peasant Percent Clamped: ${peasantPercent}%`)
+            this.VerbosePrint(`Peasant Percent Clamped: ${peasantPercent}%`)
 
             if(peasantPercent > 100) {
                 peasantPercent -= 100
-                this.l.Log(`Peasant Percent Final: ${peasantPercent}%`)
+                this.VerbosePrint(`Peasant Percent Final: ${peasantPercent}%`)
                 OgreSpawner.DesignatedFaction.ApplyEffectBundle(`${PEASANTS_EFFECT_PREFIX}${peasantPercent}`, 0)
                 
                 if (!localStorage.getItem("ScriptEventNegativePeasantEconomy") &&
@@ -340,8 +346,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 }                    
                 
                 localStorage.setItem(`peasants_ratio_positive_${factionKey}`, false)
+                this.l.Log(`CalculatePeasantSlotsUsageAndApplyPenalties was triggered peasantPercent ${peasantPercent}%`)
             } else {
-                this.l.Log("Peasant Percent Final: 0")
+                this.VerbosePrint("Peasant Percent Final: 0")
                 this.ClearAllPenalties()
                 OgreSpawner.DesignatedFaction.ApplyEffectBundle(`${PEASANTS_EFFECT_PREFIX}0`, 0)
             
@@ -352,6 +359,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     localStorage.setItem("ScriptEventPositivePeasantEconomy", true)
                 }                
                 localStorage.setItem(`peasants_ratio_positive_${factionKey}`, true)
+                this.l.Log(`CalculatePeasantSlotsUsageAndApplyPenalties was triggered peasantPercent ${0}%`)
             }
             
         }
@@ -443,16 +451,16 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const ogres = OgreSpawner.FindAllOgres()
             let totalChivalryPoints = 0
             for (const iterator of ogres) {
-                this.l.Log(`GetOgresChivalryPointsFromModTraits - iterating ${iterator.SubtypeKey}`)
+                this.VerbosePrint(`GetOgresChivalryPointsFromModTraits - iterating ${iterator.SubtypeKey}`)
                 for (const skillmod of this.ChivalryPointModifierSkills) {
                     if(iterator.HasSkill(skillmod.skill)) {
                         totalChivalryPoints += skillmod.chivalry
-                        this.l.Log(`                              iterator.has_skill ${skillmod.skill} ${iterator.HasSkill(skillmod.skill)} => ${skillmod.chivalry}`)
+                        this.VerbosePrint(`                              iterator.has_skill ${skillmod.skill} ${iterator.HasSkill(skillmod.skill)} => ${skillmod.chivalry}`)
                     }
                 }
                 const traitLevel = iterator.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY)
                 const traitLevel2ChivalryPoints = this.MapTraitLevelToSlotPenaltyReduction.get(traitLevel) ?? 0
-                this.l.Log(`                                      trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2ChivalryPoints=${traitLevel2ChivalryPoints}`)
+                this.VerbosePrint(`                                      trait level ${PEASANT_REDUCTION_TRAIT_KEY} = ${traitLevel} traitLevel2ChivalryPoints=${traitLevel2ChivalryPoints}`)
                 totalChivalryPoints += traitLevel2ChivalryPoints
             }
             return totalChivalryPoints
@@ -529,10 +537,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOgreSpawner()
             this.SetupUpdatePeasantSlotUsage()
             /** START TEST SUITE */
-            if(OgreSpawner.FindAllOgres().length == 0) {
-                OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
-                StartTestSuite(this)
-            }
+            // if(OgreSpawner.FindAllOgres().length == 0) {
+            //     OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
+            //     StartTestSuite(this)
+            // }
             
             //StartTestSuite2()
             
