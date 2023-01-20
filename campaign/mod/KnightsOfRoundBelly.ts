@@ -1,7 +1,6 @@
 namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
     export const VERSION = 1
-    export const ADMKNIGHTSOFTHEROUNDBELLY = "ADMKNIGHTSOFTHEROUNDBELLY:v"+VERSION
 
     const PEASANTS_EFFECT_PREFIX = "wh_dlc07_bundle_peasant_penalty_"
 
@@ -29,7 +28,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
     const LOUIS_MOUNT_SKILL_KEY   = "admiralnelson_louis_mount_unlock_item_skill_key"
 
     const LOUIS_MOUNT_KEY_FOR_BOT = "admiralnelson_louis_steed_anciliary_key"
-    const LOUISE_MACE_KEY_FOR_BOT = "admiralnelson_louis_grand_mace_doombringer"
+    const LOUIS_MACE_KEY_FOR_BOT = "admiralnelson_louis_grand_mace_doombringer"
     
     export const PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_not_commited_yet_scripted_trait_key"
     export const PEASANT_REDUCTION_TRAIT_KEY = "admiralnelson_ogre_knight_vow_peasant_reduction_scripted_trait_key"
@@ -50,7 +49,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         private OgreLordsAndChampions : ConstOgreKeyToOgreData = {
             [DUKE_LOUIS_AGENT_KEY]: {
                 regionKeys: [
-                    "wh3_main_combi_region_languille",
+                    //"wh3_main_combi_region_languille",
                     "wh3_main_combi_region_massif_orcal"
                 ],
                 defaultDilemmaKey: "admiralnelson_archduke_recruitment_at_massif_orcal_dilemma_key",
@@ -368,7 +367,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.CalculatePeasantSlotsUsageAndApplyPenalties()
         }
 
-        DisableLouisMountSkillNode() {
+        DisableLouisMountSkillNodeAndDukeOfGirthSkillNode() {
             //check if this Louis or not?
             const theObject = find_uicomponent(core.get_ui_root(), 
                 "character_details_panel", 
@@ -399,14 +398,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const cqi = context?.Call(`CQI()`) as number
             const theCharacter = FindCharacter(cqi)
 
-            //don't lock if louis has unlocked grail quest
-            if(theCharacter) {
-                if(theCharacter.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) >= 2) return
+            if(!theCharacter) {
+                return
             }
         
 
             //disable his mount skill
-            const theSkillButton = find_uicomponent(core.get_ui_root(), 
+            const mountSkillButton = find_uicomponent(core.get_ui_root(), 
                 "character_details_panel", 
                 "character_context_parent", 
                 "tab_panels", 
@@ -418,9 +416,25 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 "chain", 
                 "admiralnelson_louis_mount_unlock_item_skill_key", 
                 "card")
-            if(theSkillButton) {
-                this.l.LogWarn(theSkillButton.CurrentState())
-                theSkillButton.SetState("locked_rank")
+            if(mountSkillButton && theCharacter.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) < 2) {
+                mountSkillButton.SetState("locked_rank")
+            }
+
+             //disable his duke of girth skill
+             const dukeOfGirthSkillButton = find_uicomponent(core.get_ui_root(), 
+             "character_details_panel", 
+             "character_context_parent", 
+             "tab_panels", 
+             "skills_subpanel", 
+             "listview", 
+             "list_clip", 
+             "list_box", 
+             "chain0", 
+             "chain", 
+             "admiralnelson_ogre_louis_role_model_skill_key", 
+             "card")
+            if(dukeOfGirthSkillButton && theCharacter.GetTraitLevel(PEASANT_REDUCTION_TRAIT_KEY) < 3) {
+                dukeOfGirthSkillButton.SetState("locked_rank")
             }
 
         }
@@ -492,8 +506,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
                     if(lord.Faction.IsHuman) lord.Faction.TriggerMission(LOUIS_MISSION_KEY, true)
                     else {
-                        lord.GiveItem(LOUIS_MOUNT_KEY_FOR_BOT)
-                        lord.GiveItem(LOUISE_MACE_KEY_FOR_BOT)
+                        lord.AddSkill(LOUIS_MOUNT_SKILL_KEY)
+                        lord.GiveItem(LOUIS_MACE_KEY_FOR_BOT)
                     }
                 }
 
@@ -512,13 +526,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupGiveOgreLessPenaltiesForCompletingGrailQuests()
             this.SetupOnFactionTurnStart()
             this.SetupOnFactionTurnEnd()
-            this.SetupOnCharacterLevelPaneDisableLouisMount()        
+            this.SetupOnCharacterLevelPaneDisableLouisSkill()        
             this.SetupOgreVowHandler()    
             this.SetupOgreSpawner()
+            this.SetupUpdatePeasantSlotUsage()
             /** START TEST SUITE */
-            // if(OgreSpawner.FindAllOgres().length == 0 && DEBUG) {
-            //      OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
-            //      StartTestSuite(this)
+            // if(OgreSpawner.FindAllOgres().length == 0) {
+            //        OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
+            //        StartTestSuite(this)
             // }
             
             //StartTestSuite2()
@@ -666,23 +681,23 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.l.Log("SetupOnFactionTurnEnd ok")
         }
 
-        SetupOnCharacterLevelPaneDisableLouisMount() {
+        SetupOnCharacterLevelPaneDisableLouisSkill() {
             core.add_listener(
-                "admiralnelson SetupOnCharacterLevelPaneDisableLouisMount",
+                "admiralnelson SetupOnCharacterLevelPaneDisableLouisSkill",
                 "PanelOpenedCampaign",
                 (context) => context.string ? (context.string == "character_details_panel") : false,
-                () => setTimeout(() => this.DisableLouisMountSkillNode(), 300),
+                () => setTimeout(() => this.DisableLouisMountSkillNodeAndDukeOfGirthSkillNode(), 200),
                 true
             )
             core.add_listener(
-                "admiralnelson SetupOnCharacterLevelPaneDisableLouisMount 2",
+                "admiralnelson SetupOnCharacterLevelPaneDisableLouisSkill 2",
                 "ComponentLClickUp",
                 true,                    
-                () => setTimeout(() => this.DisableLouisMountSkillNode(), 300),
+                () => setTimeout(() => this.DisableLouisMountSkillNodeAndDukeOfGirthSkillNode(), 200),
                 true
             )
             
-            this.l.Log(`SetupOnCharacterLevelPaneDisableLouisMount ok`)
+            this.l.Log(`SetupOnCharacterLevelPaneDisableLouisSkill ok`)
         }
 
         SetupOgreVowHandler(): void {
@@ -717,13 +732,25 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
             OgreSpawner.InitialiseForTheFirstTime(this.BretonnianFactionsKeys)
             OgreSpawner.Init()
-            
-            if(OgreSpawner.DesignatedFaction?.IsHuman) {
-                setInterval(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500) //bad idea
-            }
 
             this.l.Log(`SetupOgreSpawner ok`)
         }
+
+        SetupUpdatePeasantSlotUsage(): void {
+            // during startup
+            setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 300)
+            // just do this on every on click lmao
+            core.add_listener(
+                "update peasant slot usage on click",
+                "ComponentLClickUp",
+                true,
+                () => setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 100),
+                true
+            )
+
+            this.l.Log(`SetupUpdatePeasantSlotUsage ok`)
+        }
+
 
         constructor() {
             OnCampaignStart( () => this.Init() )

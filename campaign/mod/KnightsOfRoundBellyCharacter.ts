@@ -203,6 +203,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         /**
+         * Forceably adds a skill to this character. 
+         * @param skillKey Skill key to add from skill tables
+         */
+        public AddSkill(skillKey: string) {
+            cm.force_add_skill(cm.char_lookup_str(this.GetInternalInterface()), skillKey)
+        }
+
+        /**
          * Add new trait for this character
          * @param traitKey Trait key from db
          * @param showNotification Show notification "trait gained" in event panel
