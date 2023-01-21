@@ -167,8 +167,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             
             const result = []
             for (const [key, ogre] of OgreSpawner.OgreChampionKey2Regions) {
-                const intersection = regions.filter(key => 
-                    ogre.regionKeys.includes(key) && 
+                const intersection = regions.filter(regionKey => 
+                    ogre.regionKeys.includes(regionKey) && 
                     OgreSpawner.Data &&
                     !OgreSpawner.Data.spawnedOgreKeys.includes(key))
                     
@@ -198,8 +198,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             
             const result = []
             for (const [key, ogre] of OgreSpawner.OgreLordKey2Regions) {
-                const intersection = regions.filter(key => 
-                    ogre.regionKeys.includes(key) && 
+                const intersection = regions.filter(regionKey => 
+                    ogre.regionKeys.includes(regionKey) && 
                     OgreSpawner.Data && 
                     !OgreSpawner.Data.spawnedOgreKeys.includes(key))
 
