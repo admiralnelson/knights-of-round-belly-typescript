@@ -145,15 +145,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) {
                     print(`traits on this character ${character.LocalisedFullName} traits: ${JSON.stringify(character.Traits)}`)
                     if(traitKey.startsWith("wh_dlc07_trait_brt_questing_vow") && OgrePaladinVowHandler.IsKnightsVowOK(character)) {                
-                        if(character.GetTraitLevel(traitKey) > 0) {
+                        if(character.HasTrait(traitKey)) {
                             character.AddTrait(traitKey, false)
+                            OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, traitKey)
                         }
-                        OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, traitKey)
                     } else if (traitKey.startsWith("wh_dlc07_trait_brt_grail_vow") && OgrePaladinVowHandler.IsQuestingVowOK(character)) {
-                        if(character.GetTraitLevel(traitKey) > 0) {
+                        if(character.HasTrait(traitKey)) {
                             character.AddTrait(traitKey, false)
+                            OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, traitKey)
                         }
-                        OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, traitKey)
                     }                    
                 }
             }
@@ -169,13 +169,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 const character = WrapICharacterObjectToCharacter(context.character())  
                 //ogre only          
                 if(!OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) return
+                if(OgrePaladinVowHandler.IsKnightsVowOK(character)) return
 
-                const trait = KNOWLEDGE_PLEDGE_TRAIT
-                if(character.GetTraitLevel(trait) > 0) {
+                const trait = KNOWLEDGE_PLEDGE_TRAIT                
+                if(character.HasTrait(trait)) {
                     character.AddTrait(trait, false)
+                    OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, trait)
                 }
 
-                OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, trait)
             }
         }
 
@@ -189,7 +190,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const champions = faction.Champions
             for (const champion of champions) {
                 //ogre only
-                if(OgrePaladinVowHandler.AllowedOgreAgentKeys.has(champion.SubtypeKey)) {
+                if(OgrePaladinVowHandler.AllowedOgreAgentKeys.has(champion.SubtypeKey) &&
+                   !OgrePaladinVowHandler.IsKnightsVowOK(champion)) {
                     const trait = KNOWLEDGE_PLEDGE_TRAIT
                     champion.AddTrait(trait, false)
                     OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(champion, trait)
@@ -205,17 +207,19 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const character = WrapICharacterObjectToCharacter(context.character())      
             //ogre only        
             if(!OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) return
+            if(OgrePaladinVowHandler.IsKnightsVowOK(character)) return
+
 
             const ranksGained = context.ranks_gained()
             const trait = CHIVALRY_PLEDGE_TRAIT
 
-            if(character.GetTraitLevel(trait) > 0) {
+            if(character.HasTrait(trait)) {
                 for (let i = 0; i < ranksGained; i++) {
                     character.AddTrait(trait, false)                    
                 }
+                OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, trait)
             }
             
-            OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(character, trait)
         }
 
         //doesn't need to be in army
@@ -231,7 +235,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 //ogre only
                 if((OgrePaladinVowHandler.AllowedOgreAgentKeys.has(char.SubtypeKey)) && 
                     char.IsInRegion && 
-                    char.CurrentRegionKey == buildingRegionKey) {
+                    char.CurrentRegionKey == buildingRegionKey &&
+                    !OgrePaladinVowHandler.IsKnightsVowOK(char)) {
                     char.AddTrait(trait)
                     OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(char, trait)
                 }
