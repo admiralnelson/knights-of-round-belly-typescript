@@ -6,6 +6,8 @@ To compile, run `build_campaign.bat`, a new folder called script will contained 
 The assets is not stored in here, you have to download it via steam workshop or google drive link here: 
 [https://drive.google.com/file/d/10kQ2m39RIPuCHAc8Awa3VmyccPEwJwb_/view?usp=sharing]
 
+All the API is not fully declared or documented in `warhammer-header.d.ts` and `user-interface-header.d.ts`. 
+
 # Background
 In the year IC 2480, endless waves of Greenskins pouring from the Grey Mountains.
 Bretonnia forces barely hold out against the Greenskins. Not enough manpower to defend against such an invasion on their own, and the Greenskins took over the region in The Wasteland. Feramand, the leader of the Bretonnia, has decided to hire seven Ogre mercenaries and send them to the Wasteland to help Bretonnian forces against the Greenskins.

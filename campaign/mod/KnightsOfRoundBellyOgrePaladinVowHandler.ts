@@ -313,6 +313,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const LoopBodyI = (i: number) => {
                 const familyMember = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_defender_fm_cqi(i))
                 if(familyMember == null) return
+                if(familyMember.is_null_interface()) return
+                
                 const defenderCharacter = WrapICharacterObjectToCharacter(familyMember.character())
 
                 if(!defenderCharacter.IsValid()) return
