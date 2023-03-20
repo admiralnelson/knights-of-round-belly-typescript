@@ -536,6 +536,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOgreVowHandler()    
             this.SetupOgreSpawner()
             this.SetupUpdatePeasantSlotUsage()
+            this.SetupDebugConsole()
             /** START TEST SUITE */
             // if(OgreSpawner.FindAllOgres().length == 0) {
             //     OgreSpawner.DesignatedFaction?.ApplyEffectBundle("admiralnelson_ogre_low_upkeep_for_ogre_heroes_for_AI_bundle_key")
@@ -719,6 +720,17 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             )
 
             this.l.Log(`SetupUpdatePeasantSlotUsage ok`)
+        }
+
+        SetupDebugConsole(): void {
+            ConsoleHandler.Register(`kotr%-reset%-vow "(.*)" (.*)`, (param) => {
+                alert(`command triggered! kotr-reset-vow ${JSON.stringify(param)}`)
+                for (const p of param) {
+                    this.l.Log(p)
+                }
+            })
+
+            this.l.Log(`SetupDebugConsole ok`)
         }
 
 
