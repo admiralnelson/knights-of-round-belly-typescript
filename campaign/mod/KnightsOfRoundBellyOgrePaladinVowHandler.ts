@@ -424,6 +424,42 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             print(JSON.stringify(character.Traits))
         }
 
+        static ResetVow(character: Character, vow?: "knightvow"|"questingvow"|"grailvow"|"complete") {
+            if(!OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) return
+
+            for (const trait of KNIGHT_VOW_TRAITS) {
+                character.RemoveTrait(trait)
+            }
+            for (const trait of QUESTING_VOW_TRAITS) {
+                character.RemoveTrait(trait)
+            }
+            for (const trait of GRAIL_VOW_TRAITS) {
+                character.RemoveTrait(trait)
+            }
+
+            if(vow == null) {
+                logger.LogWarn(`vow was reset for this character ${character.LocalisedFullName}\n list of traits ${JSON.stringify(character.Traits)}`)
+                return
+            }
+
+            switch (vow) {
+                case "complete":
+                    character.AddTrait(VALOUR_PLEDGE_TRAIT, false, 6)
+                case "grailvow":                    
+                    character.AddTrait(CAMPAIGN_PLEDGE_TRAIT, false, 2)
+                case "questingvow":
+                    character.AddTrait(KNOWLEDGE_PLEDGE_TRAIT, false, 6)
+                case "knightvow":
+                default:
+                    break;
+            }
+
+            logger.LogWarn(`vow was reset to ${vow} for this character ${character.LocalisedFullName}\n list of traits ${JSON.stringify(character.Traits)}`)
+
+
+
+        }
+
         static Init() {
             if(OgrePaladinVowHandler.bInited) return
 

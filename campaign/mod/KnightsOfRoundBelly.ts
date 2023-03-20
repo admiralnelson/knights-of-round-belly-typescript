@@ -724,10 +724,114 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
         SetupDebugConsole(): void {
             ConsoleHandler.Register(`kotr%-reset%-vow "(.*)" (.*)`, (param) => {
-                alert(`command triggered! kotr-reset-vow ${JSON.stringify(param)}`)
-                for (const p of param) {
-                    this.l.Log(p)
+                if(param.length != 2) return
+
+                const characterName = param[0].replaceAll(`"`, ``).trim()
+                const vowType = param[1]
+                switch (vowType) {
+                    case "knightvow":
+                    case "questingvow":
+                    case "grailvow":
+                    case "complete":
+                        break
+                    default:
+                        alert(`invalid 2nd parameter. expected: knightvow|questingvow|grailvow|complete`)
+                        return
                 }
+
+                const ogres = OgreSpawner.FindAllOgres()
+                const targetOgre = ogres.find( ogre => ogre.LocalisedFullName == characterName )
+                if(targetOgre == null) {
+                    alert(`unable to find "${characterName}" in the system`)
+                    return
+                }
+                if(targetOgre.SubtypeKey == DUKE_LOUIS_AGENT_KEY) {
+                    alert(`does not work for His Enormity, Louis le Gros`)
+                    return
+                }
+
+                targetOgre.AddTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY, false)
+                OgrePaladinVowHandler.ResetVow(targetOgre, vowType)
+                switch (vowType) {
+                    case "questingvow":
+                        targetOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+                        targetOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_KEY)
+                        targetOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)     
+                    case "grailvow":
+                        targetOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+                        targetOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_KEY)
+                        targetOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 2)
+                    case "complete":
+                        targetOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
+                        targetOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_KEY)
+                        targetOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 3)
+                        break
+                    default:
+                }
+                alert(`This ogre champion ${targetOgre.LocalisedFullName} vow has been reset to ${vowType}.\n See console log for details`)
+                
+            })
+
+            ConsoleHandler.Register(`kotr%-spawn%-louis`, () => {
+                if(OgreSpawner.DesignatedFaction == null) {
+                    alert(`unable to spawn Louis le Gros as his faction doesn't exist anymore`)
+                    return
+                }
+                const findLouis = OgreSpawner.FindAllOgres().find( ogre => ogre.SubtypeKey == DUKE_LOUIS_AGENT_KEY )
+                if(findLouis) {
+                    alert(`can't spawn Louis le Gros because He is already here`)
+                    return
+                }
+                const factionLeader = OgreSpawner.DesignatedFaction.FactionLeader
+                if(factionLeader == null) {
+                    alert(`can't spawn Louis le Gros because can't locate the faction leader`)
+                    return
+                }
+                const lord = TryCastCharacterToLord(factionLeader)
+                if(lord == null) {
+                    alert(`an error occured when casting faction leader to Lord object`)
+                    return
+                }
+
+                OgreSpawner.SpawnOgre(lord, DUKE_LOUIS_AGENT_KEY, true)
+            })
+
+            ConsoleHandler.Register(`kotr%-spawn%-champion (.*)`, (param) => {
+                if(OgreSpawner.DesignatedFaction == null) {
+                    alert(`unable to spawn ogre champion as his faction doesn't exist anymore`)
+                    return
+                }
+
+                if(param.length != 1) return
+                const agentKey = param[0]
+
+                if(agentKey == DUKE_LOUIS_AGENT_KEY) {
+                    alert(`cannot spawn His Enormity, Louis le Gros. Use 'kotr-spawn-louis' instead`)
+                    return
+                }
+
+                const findOgre = OgreSpawner.FindAllOgres().find( ogre => ogre.SubtypeKey == agentKey )
+                if(findOgre) {
+                    alert(`can't spawn ${agentKey} because he is already here: ${findOgre.LocalisedFullName}`)
+                    return
+                }
+                const factionLeader = OgreSpawner.DesignatedFaction.FactionLeader
+                if(factionLeader == null) {
+                    alert(`can't spawn ogre champion because can't locate the faction leader`)
+                    return
+                }
+                const lord = TryCastCharacterToLord(factionLeader)
+                if(lord == null) {
+                    alert(`an error occured when casting faction leader to Lord object`)
+                    return
+                }
+                if(this.OgreLordsAndChampions[agentKey] == null) {
+                    alert(`invalid champion agent key. possible values: ${HECTOR_AGENT_KEY},${LUCANT_AGENT_KEY},${CLAUDIN_AGENT_KEY},${GARRAVAIN_AGENT_KEY},${GORNEMANT_AGENT_KEY}`)
+                    this.l.Log(`invalid champion agent key. possible values: ${HECTOR_AGENT_KEY},${LUCANT_AGENT_KEY},${CLAUDIN_AGENT_KEY},${GARRAVAIN_AGENT_KEY},${GORNEMANT_AGENT_KEY}`)
+                    return
+                }
+
+                OgreSpawner.SpawnOgre(lord, agentKey, false)
             })
 
             this.l.Log(`SetupDebugConsole ok`)
