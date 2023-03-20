@@ -334,6 +334,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(defeatedCharacterVow == null) return
 
                 const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
+                if(familyMemberCqi.is_null_interface()) return
                 const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
 
                 OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(attackerCharacther.GetInternalInterface().military_force(), defeatedCharacterVow)
@@ -359,6 +360,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const LoopBodyI = (i: number) => {
                 const familyMember = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
                 if(familyMember == null) return
+                if(familyMember.is_null_interface()) return
                 const attackerCharacther = WrapICharacterObjectToCharacter(familyMember.character())
 
                 // Check the family member has a character interface, as a non-legendary reinforcing character can both win and die
@@ -371,6 +373,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
             const LoopBodyJ = (i: number, j: number) => {
                 const enemyLordCharacterDetails = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_defender_fm_cqi(j)).character_details()
+                if(enemyLordCharacterDetails == null) return
                 if(enemyLordCharacterDetails.is_null_interface()) return
                 if(!enemyLordCharacterDetails.is_unique()) return
 
@@ -378,6 +381,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(defeatedCharacterVow == null) return
 
                 const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
+                if(familyMemberCqi.is_null_interface()) return
                 const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
 
                 const trait = VALOUR_PLEDGE_TRAIT
