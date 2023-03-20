@@ -190,9 +190,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const champions = faction.Champions
             for (const champion of champions) {
                 //ogre only
+                const trait = KNOWLEDGE_PLEDGE_TRAIT
                 if(OgrePaladinVowHandler.AllowedOgreAgentKeys.has(champion.SubtypeKey) &&
-                   !OgrePaladinVowHandler.IsKnightsVowOK(champion)) {
-                    const trait = KNOWLEDGE_PLEDGE_TRAIT
+                   !OgrePaladinVowHandler.IsKnightsVowOK(champion) &&
+                   champion.HasTrait(trait)) {
                     champion.AddTrait(trait, false)
                     OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(champion, trait)
                 }
