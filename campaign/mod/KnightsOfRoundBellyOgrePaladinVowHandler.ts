@@ -237,7 +237,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if((OgrePaladinVowHandler.AllowedOgreAgentKeys.has(char.SubtypeKey)) && 
                     char.IsInRegion && 
                     char.CurrentRegionKey == buildingRegionKey &&
-                    !OgrePaladinVowHandler.IsKnightsVowOK(char)) {
+                    !OgrePaladinVowHandler.IsKnightsVowOK(char) &&
+                    char.HasTrait(trait)) {
                     char.AddTrait(trait)
                     OgrePaladinVowHandler.CheckIfTraitEnoughToTriggerEvent(char, trait)
                 }
