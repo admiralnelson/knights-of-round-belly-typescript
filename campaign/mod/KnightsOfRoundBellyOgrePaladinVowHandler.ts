@@ -49,7 +49,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         [CAMPAIGN_PLEDGE_TRAIT] : 2, //should 
 	    [HEROISM_PLEDGE_TRAIT] : 2,  //be
 	    [PROTECT_PELDGE_TRAIT] : 2,  //1
-	    [PROTECT_PELDGE_TRAIT] : 2      //instead of 2?
     }
 
 
@@ -140,6 +139,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         private static AddTraitsToAllAgentsInArmy(whichForce: IMilitaryForceScript, traitKey: string) {
+            if(whichForce.is_null_interface()) return
             const charaters = WrapICharacterObjectListToCharacterArray(whichForce.character_list())
             for (const character of charaters) {
                 if(OgrePaladinVowHandler.AllowedOgreAgentKeys.has(character.SubtypeKey)) {
@@ -316,6 +316,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 const familyMember = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_defender_fm_cqi(i))
                 if(familyMember == null) return
                 if(familyMember.is_null_interface()) return
+                if(familyMember.character().is_null_interface()) return
                 
                 const defenderCharacter = WrapICharacterObjectToCharacter(familyMember.character())
 
@@ -323,7 +324,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(defenderCharacter.Faction.Culture != "wh_main_brt_bretonnia") return
 
                 const trait = VALOUR_PLEDGE_TRAIT                
-                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(defenderCharacter.GetInternalInterface().military_force(), trait)
+                const militaryForce = defenderCharacter.GetInternalInterface().military_force()
+                if(militaryForce.is_null_interface()) return
+                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)
             }
 
             const LoopBodyJ = (i: number, j: number) => {
@@ -336,9 +339,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
                 const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
                 if(familyMemberCqi.is_null_interface()) return
+                if(familyMemberCqi.character().is_null_interface()) return
                 const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
-
-                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(attackerCharacther.GetInternalInterface().military_force(), defeatedCharacterVow)
+                
+                const militaryForce = attackerCharacther.GetInternalInterface().military_force()
+                if(militaryForce.is_null_interface()) return
+                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, defeatedCharacterVow)
             }
 
             const numDefenders = cm.pending_battle_cache_num_defenders()
@@ -362,6 +368,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 const familyMember = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
                 if(familyMember == null) return
                 if(familyMember.is_null_interface()) return
+                if(familyMember.character().is_null_interface()) return
                 const attackerCharacther = WrapICharacterObjectToCharacter(familyMember.character())
 
                 // Check the family member has a character interface, as a non-legendary reinforcing character can both win and die
@@ -369,7 +376,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 if(attackerCharacther.Faction.Culture != "wh_main_brt_bretonnia") return
 
                 const trait = VALOUR_PLEDGE_TRAIT
-                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(attackerCharacther.GetInternalInterface().military_force(), trait)
+                const militaryForce = attackerCharacther.GetInternalInterface().military_force()
+                if(militaryForce.is_null_interface()) return
+                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)
             }
 
             const LoopBodyJ = (i: number, j: number) => {
@@ -383,10 +392,13 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
                 const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
                 if(familyMemberCqi.is_null_interface()) return
+                if(familyMemberCqi.character().is_null_interface()) return
                 const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
 
                 const trait = VALOUR_PLEDGE_TRAIT
-                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(attackerCharacther.GetInternalInterface().military_force(), trait)
+                const militaryForce = attackerCharacther.GetInternalInterface().military_force()
+                if(militaryForce.is_null_interface()) return
+                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)
             }
 
             const numberOfAttackers = cm.pending_battle_cache_num_attackers()
