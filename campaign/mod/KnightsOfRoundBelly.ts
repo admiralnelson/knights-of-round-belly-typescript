@@ -164,6 +164,16 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             {factionKey: "wh3_main_brt_aquitaine", priority: 9},
             {factionKey: "wh_main_brt_artois", priority: 10},
             {factionKey: "wh_main_brt_bastonne", priority: 11},
+            {factionKey: "mixer_brt_montfort", priority: 12},
+            {factionKey: "mixer_brt_gisoreux", priority: 13},
+            {factionKey: "mixer_brt_quenelles", priority: 14},
+            {factionKey: "mixer_brt_languille", priority: 15},
+            {factionKey: "mixer_brt_brionne", priority: 16},
+            {factionKey: "mixer_brt_uprising", priority: 17},
+            {factionKey: "mixer_brt_peasantry", priority: 18},
+            {factionKey: "mixer_brt_bertrand", priority: 19},
+            {factionKey: "mixer_brt_brionne", priority: 20},
+            {factionKey: "mixer_brt_languille", priority: 21},
         ]
 
         private readonly OgreMercs = [
