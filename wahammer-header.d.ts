@@ -1197,6 +1197,12 @@ This function can also reposition the camera, so it's best used on game creation
      * @param unitKey Key of unit to remove, from the main_units table.
      */
     remove_unit_from_character(characterLookUp: string, unitKey: string): void
+
+    /**
+     * Returns true if the supplied character's army contains an embedded character that is a caster, false otherwise.
+     * @param character lord
+     */
+    general_has_caster_embedded_in_army(character: ICharacterScript): boolean
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
