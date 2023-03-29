@@ -243,6 +243,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             if(OgreSpawner.designatedFaction == null) return
 
             const character = WrapICharacterObjectToCharacter(context.character())
+			
+			if(!character.Faction.IsHuman) return
+			if(!character.Faction.IsEqual(OgreSpawner.designatedFaction)) return
+			
             const lord = TryCastCharacterToLord(character)
 
             if(lord == null) {
@@ -250,8 +254,6 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 throw(`failed to cast ${character.LocalisedFullName} (${character.SubtypeKey}) into a lord`)
             }
 
-            if(!lord.Faction.IsHuman) return
-            if(!lord.Faction.IsEqual(OgreSpawner.designatedFaction)) return
 
             setTimeout(() => OgreSpawner.SpawnOgreOnOccupiedSettlementIfPossible(lord), 950)
         }
@@ -275,14 +277,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
             const character = WrapICharacterObjectToCharacter(context.character())
             const lord = TryCastCharacterToLord(character)
+			
+			if(!character.Faction.IsHuman) return
+            if(!character.Faction.IsEqual(OgreSpawner.designatedFaction)) return
 
             if(lord == null) {
                 logger.LogError(`failed to cast ${character.LocalisedFullName} (${character.SubtypeKey}) into a lord`)
                 throw(`failed to cast ${character.LocalisedFullName} (${character.SubtypeKey}) into a lord`)
             }
-
-            if(!lord.Faction.IsHuman) return
-            if(!lord.Faction.IsEqual(OgreSpawner.designatedFaction)) return
+			
             if(!OgreSpawner.IsThereAnyOgreThatCantSpawnFromRegion()) return
 
             setTimeout(() => OgreSpawner.SpawnOgreOnArmyIfPossible(lord), 950)
