@@ -458,7 +458,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
          * @returns 
          */
         public IsValid(): boolean {
-            return  cm.get_character_by_cqi(this.CqiNo) != false
+            return this.CqiNo != -1 && cm.get_character_by_cqi(this.CqiNo) != false
         }
 
         /**
@@ -613,12 +613,16 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                         const theChar = context.character ? context.character() : null
                         if(theChar == null) return false
     
+                        if(theChar.character_subtype_key() == options.agentKey) {
+                            setTimeout(() => {
+                                if(this.lordCreatedCallback) this.lordCreatedCallback(this, "CreateFromKey") 
+                            }, 200)
+                        }
+
                         return theChar.character_subtype_key() == options.agentKey
                     },
                     (context) => {
-                        const theChar = context.character ? context.character() : null
-                        if(theChar == null) return
-                        if(this.lordCreatedCallback) this.lordCreatedCallback(this, "CreateFromKey")
+                        print("")
                     }, 
                     false
                 )
@@ -758,13 +762,17 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     (context) => {
                         const theChar = context.character ? context.character() : null
                         if(theChar == null) return false
-    
+                        
+                        if(theChar.character_subtype_key() == options.agentKey) {
+                            setTimeout(() => {
+                                if(this.championCreatedCallback) this.championCreatedCallback(this, "CreateFromKey")
+                            }, 200)
+                        }
+                        
                         return theChar.character_subtype_key() == options.agentKey
                     },
                     (context) => {
-                        const theChar = context.character ? context.character() : null
-                        if(theChar == null) return
-                        if(this.championCreatedCallback) this.championCreatedCallback(this, "CreateFromKey")
+                        print("")
                     }, 
                     false
                 )
