@@ -248,6 +248,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return this.IsHuman && this.IsCurrentTurn
         }
 
+        public get CQI(): number {
+            return this.factionInterface.command_queue_index()
+        }
+
         public toString(): string {
             return this.FactionKey
         }
