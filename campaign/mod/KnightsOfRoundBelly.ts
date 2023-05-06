@@ -4,6 +4,8 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
     const VERBOSE = false
 
+    const RPC_TRIGGER_KEYWORD = "admRPC_RefreshOgres"
+
     const PEASANTS_EFFECT_PREFIX = "wh_dlc07_bundle_peasant_penalty_"
 
     export const LOUIS_MISSION_KEY    = "admiralnelson_louis_grand_mace_mission_key"
@@ -260,6 +262,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             if(VERBOSE) this.l.Log(str)
         }
 
+        RPCSyncVariables(): void {
+            this.l.LogWarn(`request to trigger Remote Procedure call was triggered`)
+            const factionCQI = OgreSpawner.DesignatedFaction?.CQI ?? -1
+            CampaignUI.TriggerCampaignScriptEvent(factionCQI, RPC_TRIGGER_KEYWORD)
+        }
+
         GetPeasantSlotsUsedByOgres(): number {
             const ogres = OgreSpawner.FindAllOgres()
             let totalPeasantsUsedByOgres = 0
@@ -383,6 +391,9 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             if(whichOgre.HasTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)) whichOgre.RemoveTrait(PEASANT_REDUCTION_TRAIT_NOT_COMMITTED_YET_KEY)
             whichOgre.AddTrait(PEASANT_REDUCTION_TRAIT_KEY, true, 1)            
             this.CalculatePeasantSlotsUsageAndApplyPenalties()
+
+            //resync the variables
+            this.RPCSyncVariables()
         }
 
         DisableLouisMountSkillNodeAndDukeOfGirthSkillNode() {
@@ -532,7 +543,12 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             }
 
             //only human can run this function
-            if(character.Faction.IsHuman) setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 500)
+            if(character.Faction.IsHuman) setTimeout(() => {
+                this.CalculatePeasantSlotsUsageAndApplyPenalties()
+
+                //and finally resync the variables
+                this.RPCSyncVariables()
+            }, 500)
         }
 
         Init(): void {
@@ -546,6 +562,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             this.SetupOgreVowHandler()    
             this.SetupOgreSpawner()
             this.SetupUpdatePeasantSlotUsage()
+            this.SetupRemoteProcedureCalls()
             this.SetupDebugConsole()
             /** START TEST SUITE */
             // if(OgreSpawner.FindAllOgres().length == 0) {
@@ -730,6 +747,24 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             )
 
             this.l.Log(`SetupUpdatePeasantSlotUsage ok`)
+        }
+
+        SetupRemoteProcedureCalls(): void {
+            core.add_listener(
+                "remote procedure call on update peasant slot usage",
+                "UITrigger",
+                context => {
+                    if(context.trigger == null) return false
+                    return context.trigger() == RPC_TRIGGER_KEYWORD
+                },
+                () => {
+                    this.l.LogWarn(`Remote Procedure call was triggered!`)
+                    this.CalculatePeasantSlotsUsageAndApplyPenalties()
+                },
+                true
+            )
+
+            this.l.Log(`SetupRemoteProcedureCalls ok`);
         }
 
         SetupDebugConsole(): void {
