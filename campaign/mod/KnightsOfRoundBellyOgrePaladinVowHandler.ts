@@ -311,40 +311,54 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         //MUST be in army
         private static AddKillLordsOrLegendaryLordPledgeDefender(context: IContext) {
             if(!cm.pending_battle_cache_defender_victory()) return
+            if(cm.model().pending_battle().defender().is_null_interface()) return
+            const lord = WrapICharacterObjectToCharacter(cm.model().pending_battle().defender())
+            if(lord == null) return
+            if(OgreSpawner.DesignatedFaction == null) return
+            if(!lord.Faction.IsEqual(OgreSpawner.DesignatedFaction)) return
+
 
             const LoopBodyI = (i: number) => {
-                const familyMember = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_defender_fm_cqi(i))
-                if(familyMember == null) return
-                if(familyMember.is_null_interface()) return
-                if(familyMember.character().is_null_interface()) return
-                
-                const defenderCharacter = WrapICharacterObjectToCharacter(familyMember.character())
+                try {
+                    const familyMember = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_defender_fm_cqi(i))
+                    if(familyMember == null) return
+                    if(familyMember.is_null_interface()) return
+                    if(familyMember.character().is_null_interface()) return
+                    
+                    const defenderCharacter = WrapICharacterObjectToCharacter(familyMember.character())
 
-                if(!defenderCharacter.IsValid()) return
-                if(defenderCharacter.Faction.Culture != "wh_main_brt_bretonnia") return
+                    if(!defenderCharacter.IsValid()) return
+                    if(defenderCharacter.Faction.Culture != "wh_main_brt_bretonnia") return
 
-                const trait = VALOUR_PLEDGE_TRAIT                
-                const militaryForce = defenderCharacter.GetInternalInterface().military_force()
-                if(militaryForce.is_null_interface()) return
-                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)
+                    const trait = VALOUR_PLEDGE_TRAIT                
+                    const militaryForce = defenderCharacter.GetInternalInterface().military_force()
+                    if(militaryForce.is_null_interface()) return
+                    OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)
+                } catch (error) {
+                    logger.LogError(`${error} when running AddKillLordsOrLegendaryLordPledgeAttacker LoopBodyI`)
+                }
             }
 
             const LoopBodyJ = (i: number, j: number) => {
-                const enemyLordCharacterDetails = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(j)).character_details()
-                if(enemyLordCharacterDetails.is_null_interface()) return
-                if(!enemyLordCharacterDetails.is_unique()) return
+                try {
+                    const enemyLordCharacterDetails = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(j)).character_details()
+                    if(enemyLordCharacterDetails.is_null_interface()) return
+                    if(!enemyLordCharacterDetails.is_unique()) return
 
-                const defeatedCharacterVow = VOW_LEGENDARY_LORD_CULTURES[enemyLordCharacterDetails.faction().culture()]
-                if(defeatedCharacterVow == null) return
+                    const defeatedCharacterVow = VOW_LEGENDARY_LORD_CULTURES[enemyLordCharacterDetails.faction().culture()]
+                    if(defeatedCharacterVow == null) return
 
-                const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
-                if(familyMemberCqi.is_null_interface()) return
-                if(familyMemberCqi.character().is_null_interface()) return
-                const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
-                
-                const militaryForce = attackerCharacther.GetInternalInterface().military_force()
-                if(militaryForce.is_null_interface()) return
-                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, defeatedCharacterVow)
+                    const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
+                    if(familyMemberCqi.is_null_interface()) return
+                    if(familyMemberCqi.character().is_null_interface()) return
+                    const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
+                    
+                    const militaryForce = attackerCharacther.GetInternalInterface().military_force()
+                    if(militaryForce.is_null_interface()) return
+                    OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, defeatedCharacterVow)
+                } catch (error) {
+                    logger.LogError(`${error} when running AddKillLordsOrLegendaryLordPledgeAttacker LoopBodyJ`)                    
+                }
             }
 
             const numDefenders = cm.pending_battle_cache_num_defenders()
@@ -363,42 +377,55 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         //MUST be in army
         private static AddKillLordsOrLegendaryLordPledgeAttacker(context: IContext) {
             if(!cm.pending_battle_cache_attacker_victory()) return
+            if(cm.model().pending_battle().attacker().is_null_interface()) return
+            const lord = WrapICharacterObjectToCharacter(cm.model().pending_battle().attacker())
+            if(lord == null) return
+            if(OgreSpawner.DesignatedFaction == null) return
+            if(!lord.Faction.IsEqual(OgreSpawner.DesignatedFaction)) return
 
             const LoopBodyI = (i: number) => {
-                const familyMember = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
-                if(familyMember == null) return
-                if(familyMember.is_null_interface()) return
-                if(familyMember.character().is_null_interface()) return
-                const attackerCharacther = WrapICharacterObjectToCharacter(familyMember.character())
+                try {                    
+                    const familyMember = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
+                    if(familyMember == null) return
+                    if(familyMember.is_null_interface()) return
+                    if(familyMember.character().is_null_interface()) return
+                    const attackerCharacther = WrapICharacterObjectToCharacter(familyMember.character())
 
-                // Check the family member has a character interface, as a non-legendary reinforcing character can both win and die
-                if(!attackerCharacther.IsValid()) return
-                if(attackerCharacther.Faction.Culture != "wh_main_brt_bretonnia") return
+                    // Check the family member has a character interface, as a non-legendary reinforcing character can both win and die
+                    if(!attackerCharacther.IsValid()) return
+                    if(attackerCharacther.Faction.Culture != "wh_main_brt_bretonnia") return
 
-                const trait = VALOUR_PLEDGE_TRAIT
-                const militaryForce = attackerCharacther.GetInternalInterface().military_force()
-                if(militaryForce.is_null_interface()) return
-                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)
+                    const trait = VALOUR_PLEDGE_TRAIT
+                    const militaryForce = attackerCharacther.GetInternalInterface().military_force()
+                    if(militaryForce.is_null_interface()) return
+                    OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)   
+                } catch (error) {
+                    logger.LogError(`${error} when running AddKillLordsOrLegendaryLordPledgeAttacker LoopBodyI`)
+                }                
             }
 
             const LoopBodyJ = (i: number, j: number) => {
-                const enemyLordCharacterDetails = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_defender_fm_cqi(j)).character_details()
-                if(enemyLordCharacterDetails == null) return
-                if(enemyLordCharacterDetails.is_null_interface()) return
-                if(!enemyLordCharacterDetails.is_unique()) return
+                try {
+                    const enemyLordCharacterDetails = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_defender_fm_cqi(j)).character_details()
+                    if(enemyLordCharacterDetails == null) return
+                    if(enemyLordCharacterDetails.is_null_interface()) return
+                    if(!enemyLordCharacterDetails.is_unique()) return
 
-                const defeatedCharacterVow = VOW_LEGENDARY_LORD_CULTURES[enemyLordCharacterDetails.faction().culture()]
-                if(defeatedCharacterVow == null) return
+                    const defeatedCharacterVow = VOW_LEGENDARY_LORD_CULTURES[enemyLordCharacterDetails.faction().culture()]
+                    if(defeatedCharacterVow == null) return
 
-                const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
-                if(familyMemberCqi.is_null_interface()) return
-                if(familyMemberCqi.character().is_null_interface()) return
-                const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
+                    const familyMemberCqi = cm.get_family_member_by_cqi(cm.pending_battle_cache_get_attacker_fm_cqi(i))
+                    if(familyMemberCqi.is_null_interface()) return
+                    if(familyMemberCqi.character().is_null_interface()) return
+                    const attackerCharacther = WrapICharacterObjectToCharacter(familyMemberCqi.character())
 
-                const trait = VALOUR_PLEDGE_TRAIT
-                const militaryForce = attackerCharacther.GetInternalInterface().military_force()
-                if(militaryForce.is_null_interface()) return
-                OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)
+                    const trait = VALOUR_PLEDGE_TRAIT
+                    const militaryForce = attackerCharacther.GetInternalInterface().military_force()
+                    if(militaryForce.is_null_interface()) return
+                    OgrePaladinVowHandler.AddTraitsToAllAgentsInArmy(militaryForce, trait)
+                } catch (error) {
+                    logger.LogError(`${error} when running AddKillLordsOrLegendaryLordPledgeAttacker LoopBodyJ`)
+                }
             }
 
             const numberOfAttackers = cm.pending_battle_cache_num_attackers()
