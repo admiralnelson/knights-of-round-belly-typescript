@@ -742,7 +742,11 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 "update peasant slot usage on click",
                 "ComponentLClickUp",
                 true,
-                () => setTimeout(() => this.CalculatePeasantSlotsUsageAndApplyPenalties(), 100),
+                () => setTimeout(() => {
+                    this.CalculatePeasantSlotsUsageAndApplyPenalties()
+                    //sync variables
+                    this.RPCSyncVariables()                    
+                }, 100),
                 true
             )
 
