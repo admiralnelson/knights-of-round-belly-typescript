@@ -263,7 +263,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         }
 
         RPCSyncVariables(): void {
-            this.l.LogWarn(`request to trigger Remote Procedure call was triggered`)
+            //this.l.LogWarn(`request to trigger Remote Procedure call was triggered`)
             const factionCQI = OgreSpawner.DesignatedFaction?.CQI ?? -1
             CampaignUI.TriggerCampaignScriptEvent(factionCQI, RPC_TRIGGER_KEYWORD)
         }
@@ -364,7 +364,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 }                    
              
                 localStorage.setItem(`peasants_ratio_positive_${factionKey}`, false)
-                this.l.Log(`CalculatePeasantSlotsUsageAndApplyPenalties was triggered peasantPercent ${peasantPercent}%`)
+                //this.l.Log(`CalculatePeasantSlotsUsageAndApplyPenalties was triggered peasantPercent ${peasantPercent}%`)
             } else {
                 this.VerbosePrint("Peasant Percent Final: 0")
                 this.ClearAllPenalties()
@@ -377,7 +377,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     localStorage.setItem("ScriptEventPositivePeasantEconomy", true)
                 }                
                 localStorage.setItem(`peasants_ratio_positive_${factionKey}`, true)
-                this.l.Log(`CalculatePeasantSlotsUsageAndApplyPenalties was triggered peasantPercent ${0}%`)
+                //this.l.Log(`CalculatePeasantSlotsUsageAndApplyPenalties was triggered peasantPercent ${0}%`)
             }
             
         }
