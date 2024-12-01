@@ -158,7 +158,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             return this.GetFactionInterface().has_effect_bundle(effectBundleKey)
         }
 
-       /**
+        /**
         * Registers a turn countdown event for this faction. The supplied script event will be triggered after the specified number of turns has passed, when the FactionTurnStart event is received for the specified faction.
         * @param turns Number of turns from now to trigger the event.
         * @param event Event to trigger. By convention, script event names begin with "ScriptEvent"
@@ -201,7 +201,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         GetPooledResource(resourceKey: string): number {
             const faction = this.GetFactionInterface()
             const query   = faction.pooled_resource_manager()
-                                   .resource(resourceKey)
+                                    .resource(resourceKey)
             const isQueryValid = !query.is_null_interface()
             
             if(!isQueryValid) {
@@ -218,7 +218,10 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
             const characters = this.factionInterface.character_list()
             for (let i = 0; i < characters.num_items(); i++) {
                 const theCharacter = characters.item_at(i)
-                result.push(new Character({characterObject: theCharacter}))
+                if(cm.char_is_general_with_army(theCharacter))
+                    result.push(new Character({characterObject: theCharacter}))
+                else if(cm.char_is_agent(theCharacter))
+                    result.push(new Character({characterObject: theCharacter}))
             }
             return result
         }
@@ -268,6 +271,21 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         public toString(): string {
             return this.FactionKey
         }
+
+        /** (getter) returns true if this faction is currently on its turn */
+        public get IsCurrentTurn(): boolean {
+            return  cm.is_factions_turn_by_key(this.FactionKey)
+        }
+
+        /** (Getter) returns true if local human faction (the human who currently control his faction on turn) */
+        public get IsHumanTurn() : boolean {
+            return this.IsHuman && this.IsCurrentTurn
+        }
+
+        public get CQI(): number {
+            return this.factionInterface.command_queue_index()
+        }
+
 
         /**
          * Rather than doing this factionA == factionB (although both instances have the same reference, the objects wrapper are still different), use this method to check if both object is equal
