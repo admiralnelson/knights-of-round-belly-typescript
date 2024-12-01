@@ -13,6 +13,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         OgreSpawner.DumpAllOgresToUnspawnable()
     }
 
+    export function SpawnAllOgre() {
+        OgreSpawner.DumpAllOgresToUnspawnable()
+        const factionLeader = OgreSpawner.DesignatedFaction?.FactionLeader
+        if(factionLeader == null) return
+
+        const factionLord = TryCastCharacterToLord(factionLeader)        
+        // if(factionLord) OgreSpawner.SpawnAllOgres(factionLord)
+    }
+
     export function StartTestSuite2() {
         SpawnOgreOnLouen()
     }

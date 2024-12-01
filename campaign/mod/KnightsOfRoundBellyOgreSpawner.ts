@@ -461,7 +461,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
 
             const treshold = ogreSpawnData[2]
             if(!IsDiceRollSucess(treshold, DICES, DICE_SIDES)) {
-                logger.LogWarn(`dice roll failed`)
+                logger.LogWarn(`dice roll failed for lord ${lord.LocalisedFullName} threshold ${treshold} DICES ${DICES} DICE_SIDES ${DICE_SIDES}`)
                 return false
             }
 

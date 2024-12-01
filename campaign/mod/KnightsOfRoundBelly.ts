@@ -341,15 +341,15 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                 peasantPercent -= 100
                 this.VerbosePrint(`Peasant Percent Final: ${peasantPercent}%`)
                 OgreSpawner.DesignatedFaction.ApplyEffectBundle(`${PEASANTS_EFFECT_PREFIX}${peasantPercent}`, 0)
-                
+             
                 if (!localStorage.getItem("ScriptEventNegativePeasantEconomy") &&
                     OgreSpawner.DesignatedFaction.IsHuman) {
                     core.trigger_event("ScriptEventNegativePeasantEconomy")
                     localStorage.setItem("ScriptEventNegativePeasantEconomy", true)
                 }
-                
+             
                 const peasantRatioPositive = localStorage.getItem(`peasants_ratio_positive_${factionKey}`)
-                
+             
                 if ((peasantRatioPositive || peasantRatioPositive == null) &&
                      !localStorage.getItem(`peasant_warning_event_shown_${factionKey}`)) {
                     OgreSpawner.DesignatedFaction.ShowMessageEvent(
@@ -362,14 +362,14 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
                     localStorage.setItem(`peasant_warning_event_shown_${factionKey}`, true)
                     OgreSpawner.DesignatedFaction.AddTurnCountdownEvent(25, "ScriptEventPeasantWarningEventCooldownExpired", factionKey)
                 }                    
-                
+             
                 localStorage.setItem(`peasants_ratio_positive_${factionKey}`, false)
                 this.l.Log(`CalculatePeasantSlotsUsageAndApplyPenalties was triggered peasantPercent ${peasantPercent}%`)
             } else {
                 this.VerbosePrint("Peasant Percent Final: 0")
                 this.ClearAllPenalties()
                 OgreSpawner.DesignatedFaction.ApplyEffectBundle(`${PEASANTS_EFFECT_PREFIX}0`, 0)
-            
+        
                 if (localStorage.getItem("ScriptEventNegativePeasantEconomy") && 
                     !localStorage.getItem("ScriptEventPositivePeasantEconomy") &&
                     OgreSpawner.DesignatedFaction.IsHuman) {
@@ -578,6 +578,7 @@ namespace AdmiralNelsonKnightsOfTheRoundBelly {
         FirstTimeSetup(): void {
             this.l.LogWarn(`Running Knights of The Round Belly (Typescript Edition) version ${VERSION}`)
             this.l.Log("FirstTimeSetup ok")
+            this.l.Log(`Log date is ${Date.now().toISOString()}`)
         }
 
         SetupOnOgreChampionSpawned() {
